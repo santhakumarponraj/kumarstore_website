@@ -1,0 +1,111 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Store Settings - Kumar Store Admin{% endblock %}
+{% block header_title %}Global Storefront &amp; GSTIN Settings{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="bg-white rounded-4 border p-4 p-md-5 shadow-sm">
+      <h5 class="fw-bold mb-4 text-dark">
+        <i class="bi bi-sliders text-success me-2"></i> Global Storefront Configuration
+      </h5>
+
+      <form action="{{ url_for('admin.settings') }}" method="POST">
+        
+        <!-- Global B2C / B2B Mode Switch -->
+        <div class="p-4 bg-light rounded-4 border mb-4">
+          <label class="form-label fw-bold text-dark fs-6 d-block mb-1">
+            Global Storefront Mode Switch
+          </label>
+          <p class="small text-muted mb-3">
+            Control whether customers see retail pricing, wholesale mandi pricing, or dual dynamic mode.
+          </p>
+
+          <div class="row g-2">
+            <div class="col-md-4">
+              <input type="radio" class="btn-check" name="site_mode" id="modeHybrid" value="HYBRID" {{ 'checked' if settings.get('site_mode', 'HYBRID') == 'HYBRID' else '' }}>
+              <label class="btn btn-outline-success w-100 py-3 text-center rounded-3 fw-bold" for="modeHybrid">
+                <i class="bi bi-shuffle fs-5 d-block mb-1"></i>
+                HYBRID MODE
+                <span class="d-block extra-small text-muted fw-normal" style="font-size: 0.72rem;">Both B2C &amp; B2B active</span>
+              </label>
+            </div>
+            <div class="col-md-4">
+              <input type="radio" class="btn-check" name="site_mode" id="modeB2C" value="B2C" {{ 'checked' if settings.get('site_mode') == 'B2C' else '' }}>
+              <label class="btn btn-outline-primary w-100 py-3 text-center rounded-3 fw-bold" for="modeB2C">
+                <i class="bi bi-shop fs-5 d-block mb-1"></i>
+                B2C RETAIL ONLY
+                <span class="d-block extra-small text-muted fw-normal" style="font-size: 0.72rem;">Standard consumer retail</span>
+              </label>
+            </div>
+            <div class="col-md-4">
+              <input type="radio" class="btn-check" name="site_mode" id="modeB2B" value="B2B" {{ 'checked' if settings.get('site_mode') == 'B2B' else '' }}>
+              <label class="btn btn-outline-dark w-100 py-3 text-center rounded-3 fw-bold" for="modeB2B">
+                <i class="bi bi-building fs-5 d-block mb-1"></i>
+                B2B WHOLESALE ONLY
+                <span class="d-block extra-small text-muted fw-normal" style="font-size: 0.72rem;">Mandi wholesale packs</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Store Profile & Invoicing Identifiers -->
+        <h6 class="fw-bold text-dark mb-3">Brand &amp; Legal Tax Invoice Details</h6>
+        
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Store Brand Name</label>
+            <input type="text" name="store_name" class="form-control" value="{{ settings.get('store_name', 'Kumar Store') }}" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Brand Tagline</label>
+            <input type="text" name="store_tagline" class="form-control" value="{{ settings.get('store_tagline', 'Fresh Groceries & Wholesale Supplies Daily') }}">
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Seller GSTIN Identification *</label>
+            <input type="text" name="store_gstin" class="form-control text-uppercase" value="{{ settings.get('store_gstin', '33AAACK8765B1ZG') }}" required>
+            <div class="form-text small">Printed on all downloadable tax invoices for Input Tax Credit compliance.</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Customer Support Phone</label>
+            <input type="text" name="store_phone" class="form-control" value="{{ settings.get('store_phone', '+91 98765 43210') }}" required>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Official Support Email</label>
+          <input type="email" name="store_email" class="form-control" value="{{ settings.get('store_email', 'support@kumarstore.com') }}" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Physical Warehouse / Store Address</label>
+          <textarea name="store_address" rows="2" class="form-control" required>{{ settings.get('store_address', 'No. 42, Market Road, Commercial Hub, Chennai, Tamil Nadu - 600001') }}</textarea>
+        </div>
+
+        <!-- Shipping Fees -->
+        <h6 class="fw-bold text-dark mt-4 mb-3">Logistics &amp; Delivery Thresholds</h6>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Free Delivery Minimum Order Amount (₹)</label>
+            <input type="number" step="1" name="free_shipping_threshold" class="form-control" value="{{ settings.get('free_shipping_threshold', '1000') }}" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Standard Delivery Fee (₹)</label>
+            <input type="number" step="1" name="standard_shipping_fee" class="form-control" value="{{ settings.get('standard_shipping_fee', '50') }}" required>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-success btn-lg w-100 fw-bold rounded-pill shadow-sm">
+          Save Settings &amp; Apply Storefront Configuration
+        </button>
+
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

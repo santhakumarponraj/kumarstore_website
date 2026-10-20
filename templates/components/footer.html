@@ -1,0 +1,93 @@
+<!-- ==========================================================
+     FOOTER COMPONENT
+     Brand info, 10 Categories links, GSTIN, Support & Policies
+     ========================================================== -->
+<footer class="bg-white border-top mt-5 pt-5 pb-4 no-print">
+  <div class="container">
+    <div class="row g-4 mb-4">
+      
+      <!-- Brand & Mission -->
+      <div class="col-lg-4 col-md-6">
+        <div class="brand-logo mb-2">
+          <div class="brand-logo-icon">
+            <i class="bi bi-basket2-fill"></i>
+          </div>
+          <span class="fw-bold">Kumar Store</span>
+        </div>
+        <p class="text-muted small mt-2">
+          Tamil Nadu's premier dual-channel e-commerce grocery store. Delivering unadulterated farm pulses, premium rice, freshly milled flours, and wholesale staples with full GST invoice support.
+        </p>
+        <div class="small text-muted mb-1">
+          <i class="bi bi-geo-alt-fill text-success me-2"></i> {{ store_settings.get('store_address', 'No. 42, Market Road, Chennai, Tamil Nadu - 600001') }}
+        </div>
+        <div class="small text-muted mb-1">
+          <i class="bi bi-telephone-fill text-success me-2"></i> {{ store_settings.get('store_phone', '+91 98765 43210') }}
+        </div>
+        <div class="small text-muted">
+          <i class="bi bi-shield-check text-success me-2"></i> GSTIN: <strong>{{ store_settings.get('store_gstin', '33AAACK8765B1ZG') }}</strong>
+        </div>
+      </div>
+
+      <!-- Mandatory 10 Categories Quick Links -->
+      <div class="col-lg-4 col-md-6">
+        <h6 class="fw-bold text-dark text-uppercase mb-3">Product Categories</h6>
+        <div class="row g-1">
+          {% for cat in all_categories %}
+            <div class="col-6">
+              <a href="{{ url_for('shop.category_products', slug=cat.slug) }}" class="text-decoration-none text-muted small d-block py-1">
+                <i class="bi bi-chevron-right text-success" style="font-size: 0.7rem;"></i> {{ cat.name }}
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Quick Links & Customer Care -->
+      <div class="col-lg-2 col-md-6">
+        <h6 class="fw-bold text-dark text-uppercase mb-3">Customer Care</h6>
+        <ul class="list-unstyled small text-muted">
+          <li class="mb-2"><a href="{{ url_for('shop.cart') }}" class="text-decoration-none text-muted">Shopping Cart</a></li>
+          <li class="mb-2"><a href="{{ url_for('shop.orders') }}" class="text-decoration-none text-muted">Track Deliveries</a></li>
+          <li class="mb-2"><a href="{{ url_for('shop.wishlist') }}" class="text-decoration-none text-muted">My Wishlist</a></li>
+          <li class="mb-2"><a href="{{ url_for('shop.feedback') }}" class="text-decoration-none text-muted">Reviews &amp; Feedback</a></li>
+          <li class="mb-2"><a href="{{ url_for('auth.profile') }}" class="text-decoration-none text-muted">Business / Profile</a></li>
+          <li class="mb-2"><a href="{{ url_for('admin.dashboard') }}" class="text-decoration-none text-danger fw-bold"><i class="bi bi-lock-fill"></i> Admin Portal</a></li>
+        </ul>
+      </div>
+
+      <!-- Trust & Wholesale Assurance -->
+      <div class="col-lg-2 col-md-6">
+        <h6 class="fw-bold text-dark text-uppercase mb-3">B2B &amp; B2C Assurance</h6>
+        <div class="p-3 bg-light rounded-3 border">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-receipt-cutoff text-primary fs-4"></i>
+            <span class="small fw-bold">GST Tax Invoices</span>
+          </div>
+          <p class="text-muted extra-small mb-2" style="font-size: 0.75rem;">
+            Full input tax credit eligibility with registered HSN codes.
+          </p>
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-truck text-success fs-4"></i>
+            <span class="small fw-bold">Bulk Logistics</span>
+          </div>
+          <p class="text-muted extra-small mb-0" style="font-size: 0.75rem;">
+            Doorstep vehicle dispatch for large retail &amp; wholesale orders.
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Copyright -->
+    <div class="border-top pt-3 d-flex flex-column flex-md-row justify-content-between align-items-center small text-muted">
+      <div>
+        &copy; {{ current_year }} <strong>Kumar Store</strong>. All Rights Reserved. Engineered with Python Flask &amp; MySQL.
+      </div>
+      <div class="mt-2 mt-md-0">
+        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">FSSAI Certified</span>
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 ms-1">GST Registered</span>
+      </div>
+    </div>
+
+  </div>
+</footer>

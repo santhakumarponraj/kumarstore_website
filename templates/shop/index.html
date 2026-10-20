@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Kumar Store - Fresh Groceries & Wholesale Supplies (B2C & B2B){% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <!-- ========================================================
+       LAYER 2: OFFER ZONE (HERO CAROUSEL)
+       Auto-sliding promotional hero carousel / offer banner
+       ======================================================== -->
+  <section class="offer-zone-carousel">
+    <div id="kumarHeroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4500">
+      
+      <!-- Indicators -->
+      <div class="carousel-indicators">
+        {% for b in banners %}
+          <button type="button" data-bs-target="#kumarHeroCarousel" data-bs-slide-to="{{ loop.index0 }}" 
+                  class="{{ 'active' if loop.first else '' }}" aria-label="Slide {{ loop.index }}"></button>
+        {% endfor %}
+      </div>
+
+      <!-- Slides -->
+      <div class="carousel-inner">
+        {% for b in banners %}
+          <div class="carousel-item {{ 'active' if loop.first else '' }}">
+            <div class="hero-slide-card" style="background: {{ b.bg_gradient }};">
+              <div class="hero-slide-content">
+                {% if b.badge_text %}
+                  <span class="hero-slide-badge">{{ b.badge_text }}</span>
+                {% endif %}
+                <h1 class="display-6 fw-bold mb-2 text-white">{{ b.title }}</h1>
+                <p class="lead mb-3 text-white-50" style="font-size: 1.05rem;">{{ b.subtitle }}</p>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <a href="{{ b.link_url or '#categories' }}" class="btn btn-light text-dark fw-bold px-4 py-2 rounded-pill shadow-sm">
+                    Shop Now <i class="bi bi-arrow-right ms-1"></i>
+                  </a>
+                  {% if b.coupon_code %}
+                    <span class="badge bg-warning text-dark py-2 px-3 rounded-pill fw-bold border">
+                      Code: {{ b.coupon_code }}
+                    </span>
+                  {% endif %}
+                </div>
+              </div>
+              <img src="{{ b.image_url or url_for('static', filename='img/fallback.svg') }}" 
+                   alt="{{ b.title }}" 
+                   class="hero-slide-img-overlay"
+                   onerror="if(!this.dataset.fallbackApplied){this.dataset.fallbackApplied='true';this.src='/static/img/fallback.svg';}">
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <!-- Controls -->
+      <button class="carousel-control-prev" type="button" data-bs-target="#kumarHeroCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon p-3 bg-dark bg-opacity-25 rounded-circle" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#kumarHeroCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon p-3 bg-dark bg-opacity-25 rounded-circle" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ========================================================
+       TRUST & VALUE PROPOSITIONS
+       ======================================================== -->
+  <section class="mb-5">
+    <div class="row g-3">
+      <div class="col-6 col-lg-3">
+        <div class="feature-box">
+          <div class="feature-box-icon"><i class="bi bi-patch-check-fill"></i></div>
+          <div>
+            <h6 class="fw-bold mb-0">100% Farm Fresh</h6>
+            <span class="text-muted small">Desi unpolished staples</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="feature-box">
+          <div class="feature-box-icon"><i class="bi bi-boxes"></i></div>
+          <div>
+            <h6 class="fw-bold mb-0">Dual B2C &amp; B2B</h6>
+            <span class="text-muted small">Retail &amp; Mandi bulk rates</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="feature-box">
+          <div class="feature-box-icon"><i class="bi bi-truck"></i></div>
+          <div>
+            <h6 class="fw-bold mb-0">Fast Delivery</h6>
+            <span class="text-muted small">Daily doorstep dispatch</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="feature-box">
+          <div class="feature-box-icon"><i class="bi bi-receipt"></i></div>
+          <div>
+            <h6 class="fw-bold mb-0">GST Tax Invoices</h6>
+            <span class="text-muted small">Input tax credit ready</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================
+       FEATURED HOT DEALS
+       ======================================================== -->
+  {% if featured_products %}
+  <section class="mb-5">
+    <div class="section-header">
+      <h2 class="section-title">Today's Featured Hot Deals</h2>
+      <a href="{{ url_for('shop.search') }}" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold">
+        Explore All Deals <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 g-md-4">
+      {% for product in featured_products %}
+        <div class="col">
+          {% include 'components/product_card.html' %}
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ========================================================
+       LAYER 3: CATEGORY-WISE SHOWCASE
+       Product grid grouped dynamically by category with View All
+       ======================================================== -->
+  <section id="categories" class="mb-5">
+    {% for section in category_showcase %}
+      <div class="category-block mb-5">
+        <div class="section-header">
+          <div class="d-flex align-items-center gap-3">
+            <h2 class="section-title">{{ section.category.name }}</h2>
+            <span class="badge bg-light text-muted border small d-none d-sm-inline">
+              {{ section.category.description }}
+            </span>
+          </div>
+          <a href="{{ url_for('shop.category_products', slug=section.category.slug) }}" 
+             class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold text-nowrap">
+            View All <i class="bi bi-arrow-right ms-1"></i>
+          </a>
+        </div>
+
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 g-md-4">
+          {% for product in section.products %}
+            <div class="col">
+              {% include 'components/product_card.html' %}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </section>
+
+  <!-- ========================================================
+       B2B BULK PROCUREMENT CALLOUT BANNER
+       ======================================================== -->
+  <section class="mb-5">
+    <div class="p-4 p-md-5 rounded-4 bg-primary text-white position-relative overflow-hidden shadow-sm" style="background: linear-gradient(135deg, #047857 0%, #064e3b 100%) !important;">
+      <div class="row align-items-center">
+        <div class="col-lg-8">
+          <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold mb-2">Wholesale Grocery Mandi</span>
+          <h3 class="display-6 fw-bold mb-2">Running a Restaurant, Hotel, or Provision Store?</h3>
+          <p class="lead mb-3 text-white-50" style="font-size: 1rem;">
+            Access direct wholesale mandi pricing on 25kg / 50kg bags, bulk oil tins, and master cartons. Get tax-compliant GST invoices and scheduled transport delivery across South India.
+          </p>
+          <div class="d-flex align-items-center gap-3 flex-wrap">
+            {% if active_mode != 'b2b' %}
+              <a href="{{ url_for('shop.switch_mode', mode='b2b') }}" class="btn btn-warning text-dark fw-bold px-4 py-2 rounded-pill">
+                <i class="bi bi-building me-1"></i> Switch to Wholesale View
+              </a>
+            {% endif %}
+            <a href="{{ url_for('auth.register', mode='b2b') }}" class="btn btn-outline-light fw-bold px-4 py-2 rounded-pill">
+              Register B2B Company Account
+            </a>
+          </div>
+        </div>
+        <div class="col-lg-4 text-center mt-4 mt-lg-0">
+          <i class="bi bi-truck-flatbed text-white-50" style="font-size: 8rem; opacity: 0.3;"></i>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+{% endblock %}

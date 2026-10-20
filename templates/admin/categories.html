@@ -1,0 +1,103 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Manage Categories - Kumar Store Admin{% endblock %}
+{% block header_title %}Mandatory Grocery Categories (10){% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  
+  <!-- Categories List -->
+  <div class="col-lg-8">
+    <div class="bg-white rounded-4 border p-4 shadow-sm">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0 text-dark">Store Categories ({{ categories|length }})</h5>
+        <span class="badge bg-success-subtle text-success">10 Mandatory Categories Active</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table align-middle table-hover mb-0">
+          <thead class="table-light small text-uppercase text-muted">
+            <tr>
+              <th>Order</th>
+              <th>Category</th>
+              <th>Slug</th>
+              <th>Products</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in categories %}
+              <tr>
+                <td><strong>#{{ c.display_order }}</strong></td>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <img src="{{ c.image_url or url_for('static', filename='img/fallback.svg') }}" 
+                         alt="{{ c.name }}" 
+                         class="rounded border fallback-capable"
+                         style="width: 38px; height: 38px; object-fit: cover;"
+                         onerror="if(!this.dataset.fallbackApplied){this.dataset.fallbackApplied='true';this.src='/static/img/fallback.svg';}">
+                    <div>
+                      <strong class="text-dark">{{ c.name }}</strong>
+                      <div class="extra-small text-muted" style="font-size: 0.72rem;">{{ c.description }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td><code class="small">{{ c.slug }}</code></td>
+                <td><span class="badge bg-light text-dark border">{{ c.product_count }} items</span></td>
+                <td class="text-end">
+                  <form action="{{ url_for('admin.category_delete', id=c.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this category?');">
+                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2" {{ 'disabled' if c.product_count > 0 else '' }}>
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Category Form -->
+  <div class="col-lg-4">
+    <div class="bg-white rounded-4 border p-4 shadow-sm">
+      <h5 class="fw-bold mb-3 text-dark">
+        <i class="bi bi-plus-circle text-success me-1"></i> Add Category
+      </h5>
+
+      <form action="{{ url_for('admin.categories') }}" method="POST">
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Category Name *</label>
+          <input type="text" name="name" class="form-control" placeholder="e.g. Organic Millets" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold">URL Slug *</label>
+          <input type="text" name="slug" class="form-control" placeholder="e.g. organic-millets" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Brief Description</label>
+          <textarea name="description" rows="2" class="form-control" placeholder="Short description for storefront..."></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Image URL</label>
+          <input type="url" name="image_url" class="form-control" placeholder="https://images.unsplash.com/...">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Display Order</label>
+          <input type="number" name="display_order" class="form-control" value="11">
+        </div>
+
+        <button type="submit" class="btn btn-success w-100 fw-bold rounded-pill">
+          Create Category
+        </button>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

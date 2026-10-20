@@ -1,0 +1,236 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ 'Edit Product' if product else 'New Product' }} - Kumar Store Admin{% endblock %}
+{% block header_title %}{{ 'Edit Grocery Product' if product else 'Add New Grocery Product' }}{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  
+  <!-- Left: Main Product Details Form -->
+  <div class="col-lg-7">
+    <div class="bg-white rounded-4 border p-4 shadow-sm mb-4">
+      <h5 class="fw-bold mb-3 text-dark">
+        <i class="bi bi-info-circle text-success me-2"></i> Product Information
+      </h5>
+
+      <form action="{{ url_for('admin.product_edit', id=product.id) if product else url_for('admin.product_new') }}" method="POST">
+        
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Product Title *</label>
+          <input type="text" name="name" class="form-control" value="{{ product.name if product else '' }}" required placeholder="e.g. Royal Sona Masoori Rice">
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">URL Slug *</label>
+            <input type="text" name="slug" class="form-control" value="{{ product.slug if product else '' }}" required placeholder="e.g. royal-sona-masoori-rice">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Grocery Category *</label>
+            <select name="category_id" class="form-select" required>
+              {% for c in categories %}
+                <option value="{{ c.id }}" {{ 'selected' if (product and product.category_id == c.id) else '' }}>{{ c.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Product Description</label>
+          <textarea name="description" rows="3" class="form-control" placeholder="Describe quality, source mill, culinary usage...">{{ product.description if product else '' }}</textarea>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Image URL</label>
+          <input type="url" name="image_url" class="form-control" value="{{ product.image_url if product else '' }}" placeholder="https://images.unsplash.com/...">
+          <div class="form-text small">Use a high resolution image URL or leave empty for the automatic SVG grocery fallback.</div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">HSN Code</label>
+            <input type="text" name="hsn_code" class="form-control" value="{{ product.hsn_code if product else '1006' }}" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">GST Rate (%)</label>
+            <input type="number" step="0.1" name="tax_rate" class="form-control" value="{{ product.tax_rate if product else '5.0' }}" required>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-6">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" name="is_featured" id="featSwitch" {{ 'checked' if (product and product.is_featured) else '' }}>
+              <label class="form-check-label fw-bold small" for="featSwitch">Featured on Home Showcase</label>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" name="is_active" id="activeSwitch" {{ 'checked' if (not product or product.is_active) else '' }}>
+              <label class="form-check-label fw-bold small" for="activeSwitch">Active in Catalog</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Initial unit variant inputs if creating new product -->
+        {% if not product %}
+          <div class="p-3 bg-light rounded-3 border mb-4">
+            <h6 class="fw-bold text-success mb-3"><i class="bi bi-box-seam me-1"></i> Initial Primary Unit Variant</h6>
+            <div class="row g-2 mb-2">
+              <div class="col-md-6">
+                <label class="form-label extra-small fw-bold">Unit Name (e.g. 1 kg, 5 kg Bag)</label>
+                <input type="text" name="unit_name" class="form-control form-control-sm" value="1 kg" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label extra-small fw-bold">Target Channel</label>
+                <select name="unit_type" class="form-select form-select-sm">
+                  <option value="BOTH">BOTH (Retail &amp; Wholesale)</option>
+                  <option value="B2C">B2C Retail Only</option>
+                  <option value="B2B">B2B Wholesale Only</option>
+                </select>
+              </div>
+            </div>
+            <div class="row g-2">
+              <div class="col-md-3">
+                <label class="form-label extra-small fw-bold">MRP (₹)</label>
+                <input type="number" step="0.01" name="mrp" class="form-control form-control-sm" value="120.00" required>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label extra-small fw-bold">Retail Price (₹)</label>
+                <input type="number" step="0.01" name="selling_price" class="form-control form-control-sm" value="95.00" required>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label extra-small fw-bold">Wholesale Price (₹)</label>
+                <input type="number" step="0.01" name="b2b_price" class="form-control form-control-sm" value="85.00" required>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label extra-small fw-bold">Stock Qty</label>
+                <input type="number" name="stock_qty" class="form-control form-control-sm" value="100" required>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-success fw-bold px-4 rounded-pill">
+            <i class="bi bi-save me-1"></i> {{ 'Update Product' if product else 'Create Product' }}
+          </button>
+          <a href="{{ url_for('admin.products') }}" class="btn btn-outline-secondary rounded-pill px-3">Cancel</a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- Right: Unit Variants List & Add Unit (If Editing) -->
+  <div class="col-lg-5">
+    {% if product %}
+      <!-- Unit Variants List -->
+      <div class="bg-white rounded-4 border p-4 shadow-sm mb-4">
+        <h5 class="fw-bold mb-3 text-dark">
+          <i class="bi bi-layers text-primary me-2"></i> Packaging &amp; Pricing Variants ({{ units|length }})
+        </h5>
+
+        <div class="table-responsive mb-4">
+          <table class="table table-sm align-middle table-bordered mb-0">
+            <thead class="table-light extra-small text-uppercase">
+              <tr>
+                <th>Unit</th>
+                <th>Type</th>
+                <th>Retail</th>
+                <th>Wholesale</th>
+                <th>MOQ</th>
+                <th>Stock</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for u in units %}
+                <tr>
+                  <td class="fw-bold">
+                    {{ u.unit_name }}
+                    {% if u.is_default %}
+                      <span class="badge bg-success-subtle text-success extra-small d-block">Default</span>
+                    {% endif %}
+                  </td>
+                  <td><span class="badge bg-light text-dark border">{{ u.unit_type }}</span></td>
+                  <td class="text-success fw-bold">{{ u.selling_price|currency }}</td>
+                  <td class="text-primary fw-bold">{{ u.b2b_price|currency }}</td>
+                  <td>{{ u.moq }}</td>
+                  <td>{{ u.stock_qty }}</td>
+                  <td class="text-end">
+                    <form action="{{ url_for('admin.unit_delete', unit_id=u.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this unit variant?');">
+                      <button type="submit" class="btn btn-sm btn-outline-danger border-0 p-0 text-danger" title="Delete variant">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Add New Unit Variant Form -->
+        <div class="p-3 bg-light rounded-3 border">
+          <h6 class="fw-bold text-primary mb-3"><i class="bi bi-plus-circle me-1"></i> Add Another Unit Variant</h6>
+          <form action="{{ url_for('admin.unit_add', product_id=product.id) }}" method="POST">
+            <div class="row g-2 mb-2">
+              <div class="col-6">
+                <label class="form-label extra-small fw-bold">Unit Name *</label>
+                <input type="text" name="unit_name" class="form-control form-control-sm" placeholder="e.g. 25 kg Sack" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label extra-small fw-bold">Applicable Channel</label>
+                <select name="unit_type" class="form-select form-select-sm">
+                  <option value="BOTH">BOTH (Retail &amp; Bulk)</option>
+                  <option value="B2C">B2C Retail Only</option>
+                  <option value="B2B">B2B Wholesale Only</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row g-2 mb-2">
+              <div class="col-4">
+                <label class="form-label extra-small fw-bold">MRP (₹) *</label>
+                <input type="number" step="0.01" name="mrp" class="form-control form-control-sm" required>
+              </div>
+              <div class="col-4">
+                <label class="form-label extra-small fw-bold">Retail (B2C) ₹ *</label>
+                <input type="number" step="0.01" name="selling_price" class="form-control form-control-sm" required>
+              </div>
+              <div class="col-4">
+                <label class="form-label extra-small fw-bold">Wholesale (B2B) ₹ *</label>
+                <input type="number" step="0.01" name="b2b_price" class="form-control form-control-sm" required>
+              </div>
+            </div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label extra-small fw-bold">Wholesale MOQ</label>
+                <input type="number" name="moq" class="form-control form-control-sm" value="1" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label extra-small fw-bold">Initial Stock Qty</label>
+                <input type="number" name="stock_qty" class="form-control form-control-sm" value="50" required>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold rounded-pill">
+              <i class="bi bi-plus-lg me-1"></i> Add Unit Packaging
+            </button>
+          </form>
+        </div>
+
+      </div>
+    {% else %}
+      <div class="bg-white rounded-4 border p-4 shadow-sm text-center text-muted">
+        <i class="bi bi-info-circle display-4 mb-2 d-block text-primary"></i>
+        <h6>Multi-Unit Packaging</h6>
+        <p class="small">After creating the primary product, you can add unlimited packaging variants (e.g. 500g, 1kg, 5kg, 25kg Bag, 50kg Sack) with custom B2C &amp; B2B rates.</p>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

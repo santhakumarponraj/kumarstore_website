@@ -1,0 +1,185 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin Dashboard - Kumar Store{% endblock %}
+{% block header_title %}Operations &amp; Sales Dashboard{% endblock %}
+
+{% block content %}
+<!-- KPI Metrics Row -->
+<div class="row g-3 mb-4">
+  
+  <!-- Total Revenue -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="small text-muted fw-bold text-uppercase">Paid Revenue</span>
+        <div class="p-2 bg-success-subtle text-success rounded-3"><i class="bi bi-currency-rupee fs-5"></i></div>
+      </div>
+      <h3 class="fw-bold mb-1 text-dark">{{ total_revenue|currency }}</h3>
+      <span class="small text-muted">Settled order revenue</span>
+    </div>
+  </div>
+
+  <!-- Total Orders -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="small text-muted fw-bold text-uppercase">Total Orders</span>
+        <div class="p-2 bg-primary-subtle text-primary rounded-3"><i class="bi bi-bag-check-fill fs-5"></i></div>
+      </div>
+      <h3 class="fw-bold mb-1 text-dark">{{ total_orders }}</h3>
+      <span class="small text-muted">Across all channels</span>
+    </div>
+  </div>
+
+  <!-- B2C vs B2B Breakdown -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="small text-muted fw-bold text-uppercase">B2C vs B2B Split</span>
+        <div class="p-2 bg-info-subtle text-info rounded-3"><i class="bi bi-pie-chart-fill fs-5"></i></div>
+      </div>
+      <h4 class="fw-bold mb-1 text-dark">
+        <span class="text-success">{{ b2c_orders }}</span> Retail / 
+        <span class="text-primary">{{ b2b_orders }}</span> Bulk
+      </h4>
+      <span class="small text-muted">Order distribution</span>
+    </div>
+  </div>
+
+  <!-- Total Users -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="small text-muted fw-bold text-uppercase">Customers</span>
+        <div class="p-2 bg-warning-subtle text-warning rounded-3"><i class="bi bi-people-fill fs-5"></i></div>
+      </div>
+      <h3 class="fw-bold mb-1 text-dark">{{ total_users }}</h3>
+      <span class="small text-muted">Registered accounts</span>
+    </div>
+  </div>
+
+</div>
+
+<div class="row g-4">
+  
+  <!-- Recent Orders Table -->
+  <div class="col-lg-8">
+    <div class="bg-white rounded-4 border p-4 shadow-sm mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0 text-dark">Recent Customer Orders</h5>
+        <a href="{{ url_for('admin.orders') }}" class="btn btn-sm btn-link text-success fw-bold text-decoration-none">View All</a>
+      </div>
+
+      {% if recent_orders %}
+        <div class="table-responsive">
+          <table class="table align-middle table-hover mb-0">
+            <thead class="table-light small text-uppercase text-muted">
+              <tr>
+                <th>Order #</th>
+                <th>Customer</th>
+                <th>Channel</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for o in recent_orders %}
+                <tr>
+                  <td>
+                    <a href="{{ url_for('admin.order_view', id=o.id) }}" class="fw-bold text-dark text-decoration-none">
+                      {{ o.order_number }}
+                    </a>
+                  </td>
+                  <td>
+                    <div class="fw-bold text-dark small">{{ o.customer_name }}</div>
+                    <span class="text-muted extra-small" style="font-size: 0.75rem;">{{ o.customer_email }}</span>
+                  </td>
+                  <td>
+                    <span class="badge {{ 'bg-primary' if o.order_type == 'b2b' else 'bg-success' }}">
+                      {{ o.order_type.upper() }}
+                    </span>
+                  </td>
+                  <td class="fw-bold text-success">{{ o.grand_total|currency }}</td>
+                  <td>
+                    <form action="{{ url_for('admin.order_status_update', id=o.id) }}" method="POST" class="d-inline">
+                      <select name="order_status" class="form-select form-select-sm order-status-select py-1" 
+                              data-current-status="{{ o.order_status }}" style="width: 140px;">
+                        {% for st in ['Order Placed', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'] %}
+                          <option value="{{ st }}" {{ 'selected' if o.order_status == st else '' }}>{{ st }}</option>
+                        {% endfor %}
+                      </select>
+                    </form>
+                  </td>
+                  <td>
+                    <a href="{{ url_for('admin.order_view', id=o.id) }}" class="btn btn-sm btn-outline-secondary rounded-pill px-2" title="View details">
+                      <i class="bi bi-eye"></i>
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-muted small py-4 text-center">No orders recorded yet.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Low Stock Alerts -->
+  <div class="col-lg-4">
+    <div class="bg-white rounded-4 border p-4 shadow-sm mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0 text-danger">
+          <i class="bi bi-exclamation-octagon-fill me-1"></i> Low Stock Alerts
+        </h5>
+        <span class="badge bg-danger-subtle text-danger small">{{ low_stock_items|length }} alerts</span>
+      </div>
+
+      {% if low_stock_items %}
+        <div class="list-group list-group-flush">
+          {% for item in low_stock_items %}
+            <div class="list-group-item px-0 py-2 border-bottom">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <div class="fw-bold small text-dark">{{ item.product_name }}</div>
+                  <div class="extra-small text-muted" style="font-size: 0.75rem;">
+                    {{ item.unit_name }} ({{ item.category_name }})
+                  </div>
+                </div>
+                <div class="text-end">
+                  <span class="badge bg-danger">{{ item.stock_qty }} left</span>
+                  <div class="mt-1">
+                    <a href="{{ url_for('admin.product_edit', id=item.product_id) }}" class="extra-small text-success text-decoration-none fw-bold" style="font-size: 0.75rem;">
+                      Restock &rarr;
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-4 text-muted small">
+          <i class="bi bi-check-circle text-success fs-3 d-block mb-1"></i>
+          All grocery inventory levels healthy.
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Global Mode Status Box -->
+    <div class="p-4 bg-light rounded-4 border">
+      <h6 class="fw-bold text-dark mb-2">Global Storefront Mode</h6>
+      <p class="small text-muted mb-3">
+        Currently operating in <strong>{{ site_mode }}</strong> mode. In Hybrid mode, retail shoppers see B2C units while verified wholesale businesses see mandi sacks &amp; wholesale pricing.
+      </p>
+      <a href="{{ url_for('admin.settings') }}" class="btn btn-outline-dark btn-sm rounded-pill fw-bold">
+        <i class="bi bi-sliders me-1"></i> Configure Mode &amp; GSTIN
+      </a>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

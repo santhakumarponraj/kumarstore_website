@@ -1,0 +1,172 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Order Details #{{ order.order_number }} - Kumar Store Admin{% endblock %}
+{% block header_title %}Order Management: {{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <a href="{{ url_for('admin.orders') }}" class="btn btn-outline-secondary btn-sm rounded-pill mb-2">
+      <i class="bi bi-arrow-left me-1"></i> Back to Orders
+    </a>
+    <h4 class="fw-bold mb-0">Order: {{ order.order_number }}</h4>
+    <span class="text-muted small">Placed on {{ order.created_at|format_date }}</span>
+  </div>
+  <div>
+    <a href="{{ url_for('shop.order_invoice', order_id=order.id) }}" class="btn btn-dark fw-bold rounded-pill px-4 shadow-sm" target="_blank">
+      <i class="bi bi-printer me-1"></i> Print / Download Tax Invoice
+    </a>
+  </div>
+</div>
+
+<div class="row g-4">
+  
+  <!-- Left: Order Items & Delivery Info -->
+  <div class="col-lg-8">
+    
+    <!-- Items Table -->
+    <div class="bg-white rounded-4 border p-4 shadow-sm mb-4">
+      <h5 class="fw-bold mb-3 text-dark">Purchased Grocery Items</h5>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light small text-uppercase text-muted">
+            <tr>
+              <th>Item &amp; Packaging</th>
+              <th>HSN</th>
+              <th>Unit Rate</th>
+              <th>Qty</th>
+              <th class="text-end">Total Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for it in items %}
+              <tr>
+                <td>
+                  <div class="fw-bold text-dark">{{ it.product_name }}</div>
+                  <span class="small text-muted">{{ it.unit_name }}</span>
+                </td>
+                <td class="small text-muted">{{ it.hsn_code }}</td>
+                <td>{{ it.unit_price|currency }}</td>
+                <td>{{ it.quantity }}</td>
+                <td class="text-end fw-bold text-success">{{ it.total_price|currency }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tracking History & Add Note -->
+    <div class="bg-white rounded-4 border p-4 shadow-sm">
+      <h5 class="fw-bold mb-3 text-dark">
+        <i class="bi bi-activity text-success me-2"></i> Status Transition &amp; Fulfillment Log
+      </h5>
+
+      <!-- Add Event Form -->
+      <form action="{{ url_for('admin.order_status_update', id=order.id) }}" method="POST" class="p-3 bg-light rounded-3 border mb-4">
+        <h6 class="fw-bold mb-2">Update Order Status</h6>
+        <div class="row g-2 align-items-center">
+          <div class="col-md-4">
+            <select name="order_status" class="form-select form-select-sm" required>
+              {% for st in ['Order Placed', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'] %}
+                <option value="{{ st }}" {{ 'selected' if order.order_status == st else '' }}>{{ st }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-5">
+            <input type="text" name="notes" class="form-control form-control-sm" placeholder="Tracking note (e.g. Dispatched via Mandi Truck #TN-02-4521)">
+          </div>
+          <div class="col-md-3">
+            <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold">Update Status</button>
+          </div>
+        </div>
+      </form>
+
+      <!-- History Log -->
+      {% if history %}
+        <div class="timeline position-relative ps-4" style="border-left: 2px solid #a7f3d0;">
+          {% for ev in history %}
+            <div class="position-relative mb-3">
+              <div class="position-absolute rounded-circle bg-success" style="width: 10px; height: 10px; left: -24px; top: 5px;"></div>
+              <div class="d-flex justify-content-between align-items-center">
+                <strong class="text-dark small">{{ ev.status }}</strong>
+                <span class="text-muted extra-small" style="font-size: 0.75rem;">{{ ev.created_at|format_date }}</span>
+              </div>
+              <p class="text-muted small mb-0">{{ ev.notes }}</p>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+    </div>
+
+  </div>
+
+  <!-- Right: Customer, Addresses, Pricing Breakdown -->
+  <div class="col-lg-4">
+    
+    <!-- Customer Details -->
+    <div class="bg-white rounded-4 border p-4 shadow-sm mb-4">
+      <h6 class="fw-bold mb-3 text-dark">Customer &amp; Channel</h6>
+      <div class="small">
+        <div class="fw-bold text-dark fs-6">{{ order.shipping_name }}</div>
+        <div class="text-muted">{{ order.customer_email }}</div>
+        <div class="text-muted">{{ order.shipping_phone }}</div>
+        <div class="mt-2">
+          Channel: 
+          <span class="badge {{ 'bg-primary' if order.order_type == 'b2b' else 'bg-success' }}">
+            {{ order.order_type.upper() }}
+          </span>
+        </div>
+        {% if order.buyer_company_name %}
+          <div class="mt-2 p-2 bg-light rounded border">
+            <div class="fw-bold text-dark">{{ order.buyer_company_name }}</div>
+            <div class="text-muted">GSTIN: {{ order.buyer_gstin or 'N/A' }}</div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Shipping Address -->
+    <div class="bg-white rounded-4 border p-4 shadow-sm mb-4">
+      <h6 class="fw-bold mb-2 text-dark">Shipping Destination</h6>
+      <div class="small text-muted">
+        {{ order.shipping_address }}<br>
+        {{ order.shipping_city }}, {{ order.shipping_state }} - {{ order.shipping_pincode }}
+      </div>
+    </div>
+
+    <!-- Pricing Card -->
+    <div class="bg-white rounded-4 border p-4 shadow-sm">
+      <h6 class="fw-bold mb-3 text-dark">Financial Breakdown</h6>
+      <div class="d-flex justify-content-between py-1 small">
+        <span class="text-muted">Subtotal:</span>
+        <span>{{ order.subtotal|currency }}</span>
+      </div>
+      {% if order.discount_amount > 0 %}
+      <div class="d-flex justify-content-between py-1 text-success small">
+        <span>Discount ({{ order.coupon_code or 'Promo' }}):</span>
+        <strong>- {{ order.discount_amount|currency }}</strong>
+      </div>
+      {% endif %}
+      <div class="d-flex justify-content-between py-1 small">
+        <span class="text-muted">Delivery Charges:</span>
+        <span>{{ 'FREE' if order.delivery_fee == 0 else order.delivery_fee|currency }}</span>
+      </div>
+      <div class="d-flex justify-content-between py-1 small">
+        <span class="text-muted">GST Tax Amount:</span>
+        <span>{{ order.tax_amount|currency }}</span>
+      </div>
+      <div class="d-flex justify-content-between py-2 border-top my-2 fw-bold fs-6">
+        <span>Grand Total:</span>
+        <span class="text-success">{{ order.grand_total|currency }}</span>
+      </div>
+      <div class="small text-muted">
+        Payment Mode: <strong>{{ order.payment_method }}</strong> ({{ order.payment_status }})
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

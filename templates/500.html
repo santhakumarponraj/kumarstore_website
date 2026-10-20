@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error - Kumar Store{% endblock %}
+
+{% block content %}
+<div class="container my-5 text-center">
+  <div class="py-5">
+    <div class="display-1 fw-bold text-danger mb-3">500</div>
+    <h1 class="h3 fw-bold mb-2">Unexpected Server Error</h1>
+    <p class="text-muted small mb-4">Something went wrong on our end. Our engineering team has been notified. Please try again shortly.</p>
+    <a href="{{ url_for('shop.index') }}" class="btn btn-success fw-bold px-4 py-2 rounded-pill">
+      <i class="bi bi-house-door me-1"></i> Return to Homepage
+    </a>
+  </div>
+</div>
+{% endblock %}

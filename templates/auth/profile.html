@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - Kumar Store{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{{ url_for('shop.index') }}" class="text-decoration-none text-muted">Home</a></li>
+      <li class="breadcrumb-item active text-success fw-bold" aria-current="page">My Profile</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+    
+    <!-- Profile & Business Details Column -->
+    <div class="col-lg-5">
+      
+      <!-- Account Overview Card -->
+      <div class="bg-white rounded-4 border p-4 shadow-sm mb-4">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="brand-logo-icon" style="width: 55px; height: 55px; font-size: 1.8rem;">
+            <i class="bi bi-person-circle"></i>
+          </div>
+          <div>
+            <h5 class="fw-bold mb-0 text-dark">{{ user.name }}</h5>
+            <span class="text-muted small">{{ user.email }}</span>
+            <div>
+              <span class="badge {{ 'bg-primary' if user.role == 'b2b' else ('bg-danger' if user.role == 'admin' else 'bg-success') }} mt-1">
+                {{ user.role.upper() }} Account
+              </span>
+              {% if user.role == 'b2b' and user.is_b2b_verified %}
+                <span class="badge bg-info text-dark mt-1"><i class="bi bi-patch-check-fill"></i> Verified Mandi Wholesaler</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <form action="{{ url_for('auth.profile') }}" method="POST">
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Full Name</label>
+            <input type="text" name="name" class="form-control" value="{{ user.name }}" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Phone Number</label>
+            <input type="tel" name="phone" class="form-control" value="{{ user.phone }}" required>
+          </div>
+
+          {% if user.role == 'b2b' %}
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Company / Trade Name</label>
+              <input type="text" name="company_name" class="form-control" value="{{ user.company_name or '' }}">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-bold">GSTIN Number</label>
+              <input type="text" name="gstin" class="form-control text-uppercase" value="{{ user.gstin or '' }}">
+            </div>
+          {% endif %}
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Default Delivery Address</label>
+            <textarea name="address" rows="2" class="form-control">{{ user.address or '' }}</textarea>
+          </div>
+
+          <div class="row g-2 mb-4">
+            <div class="col-5">
+              <label class="form-label small fw-bold">City</label>
+              <input type="text" name="city" class="form-control form-control-sm" value="{{ user.city or '' }}">
+            </div>
+            <div class="col-4">
+              <label class="form-label small fw-bold">State</label>
+              <input type="text" name="state" class="form-control form-control-sm" value="{{ user.state or 'Tamil Nadu' }}">
+            </div>
+            <div class="col-3">
+              <label class="form-label small fw-bold">PIN</label>
+              <input type="text" name="pincode" class="form-control form-control-sm" value="{{ user.pincode or '' }}">
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-success w-100 fw-bold rounded-pill">
+            Save Profile Changes
+          </button>
+        </form>
+      </div>
+
+      <!-- Upgrade to B2B Box (If user is currently B2C) -->
+      {% if user.role == 'b2c' %}
+        <div class="bg-primary text-white rounded-4 border p-4 shadow-sm" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;">
+          <h5 class="fw-bold mb-2"><i class="bi bi-building me-2"></i> Upgrade to B2B Wholesale Account</h5>
+          <p class="small text-white-50 mb-3">
+            Get access to wholesale mandi sacks (25kg/50kg), lower bulk pricing, and commercial GST invoices.
+          </p>
+          <form action="{{ url_for('auth.upgrade_b2b') }}" method="POST">
+            <div class="mb-2">
+              <input type="text" name="company_name" class="form-control form-control-sm" placeholder="Your Business / Shop Name" required>
+            </div>
+            <div class="mb-3">
+              <input type="text" name="gstin" class="form-control form-control-sm text-uppercase" placeholder="GSTIN (Optional)">
+            </div>
+            <button type="submit" class="btn btn-warning text-dark btn-sm w-100 fw-bold rounded-pill">
+              Activate Wholesale Status
+            </button>
+          </form>
+        </div>
+      {% endif %}
+
+    </div>
+
+    <!-- Recent Orders Column -->
+    <div class="col-lg-7">
+      <div class="bg-white rounded-4 border p-4 shadow-sm">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0 text-dark">Recent Grocery Orders</h5>
+          <a href="{{ url_for('shop.orders') }}" class="btn btn-link text-success btn-sm text-decoration-none fw-bold">View All</a>
+        </div>
+
+        {% if orders %}
+          <div class="table-responsive">
+            <table class="table align-middle table-hover mb-0">
+              <thead class="table-light small text-uppercase text-muted">
+                <tr>
+                  <th>Order</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Amount</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for o in orders %}
+                  <tr>
+                    <td>
+                      <a href="{{ url_for('shop.order_detail', order_id=o.id) }}" class="fw-bold text-dark text-decoration-none">
+                        {{ o.order_number }}
+                      </a>
+                    </td>
+                    <td class="small text-muted">{{ o.created_at|format_date('%d %b %Y') }}</td>
+                    <td>
+                      <span class="badge 
+                        {% if o.order_status == 'Delivered' %}bg-success
+                        {% elif o.order_status == 'Cancelled' %}bg-danger
+                        {% else %}bg-warning text-dark{% endif %}">
+                        {{ o.order_status }}
+                      </span>
+                    </td>
+                    <td class="fw-bold text-success">{{ o.grand_total|currency }}</td>
+                    <td class="text-end">
+                      <a href="{{ url_for('shop.order_track', order_id=o.id) }}" class="btn btn-sm btn-outline-success rounded-pill px-2" title="Track">
+                        <i class="bi bi-geo-alt"></i>
+                      </a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-center py-4 text-muted small">
+            No grocery orders placed yet.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

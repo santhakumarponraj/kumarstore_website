@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Order #{{ order.order_number }} - Kumar Store{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{{ url_for('shop.index') }}" class="text-decoration-none text-muted">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('shop.orders') }}" class="text-decoration-none text-muted">My Orders</a></li>
+      <li class="breadcrumb-item active text-success fw-bold" aria-current="page">{{ order.order_number }}</li>
+    </ol>
+  </nav>
+
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-2">
+    <div>
+      <h1 class="h3 fw-bold mb-1">Order Details: {{ order.order_number }}</h1>
+      <span class="text-muted small">Placed on {{ order.created_at|format_date }}</span>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('shop.order_track', order_id=order.id) }}" class="btn btn-success btn-sm rounded-pill px-3">
+        <i class="bi bi-geo-alt me-1"></i> Track Delivery
+      </a>
+      <a href="{{ url_for('shop.order_invoice', order_id=order.id) }}" class="btn btn-outline-dark btn-sm rounded-pill px-3" target="_blank">
+        <i class="bi bi-printer me-1"></i> Print Invoice
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    
+    <!-- Itemized List -->
+    <div class="col-lg-8">
+      <div class="bg-white rounded-4 border p-4 shadow-sm mb-4">
+        <h5 class="fw-bold mb-3 text-dark">Purchased Grocery Items</h5>
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead class="table-light small text-uppercase text-muted">
+              <tr>
+                <th>Item &amp; Packaging</th>
+                <th>HSN</th>
+                <th>Unit Price</th>
+                <th>Qty</th>
+                <th class="text-end">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for it in items %}
+                <tr>
+                  <td>
+                    <div class="fw-bold text-dark">{{ it.product_name }}</div>
+                    <span class="small text-muted">{{ it.unit_name }}</span>
+                  </td>
+                  <td class="small text-muted">{{ it.hsn_code }}</td>
+                  <td>{{ it.unit_price|currency }}</td>
+                  <td>{{ it.quantity }}</td>
+                  <td class="text-end fw-bold text-success">{{ it.total_price|currency }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Shipping & Billing Details -->
+      <div class="bg-white rounded-4 border p-4 shadow-sm">
+        <h5 class="fw-bold mb-3 text-dark">Shipping &amp; Invoicing Address</h5>
+        <div class="row g-3 small">
+          <div class="col-md-6">
+            <h6 class="fw-bold text-muted mb-1">Deliver To:</h6>
+            <div class="fw-bold text-dark">{{ order.shipping_name }}</div>
+            <div class="text-muted">{{ order.shipping_phone }}</div>
+            <div class="text-muted mt-1">
+              {{ order.shipping_address }}<br>
+              {{ order.shipping_city }}, {{ order.shipping_state }} - {{ order.shipping_pincode }}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <h6 class="fw-bold text-muted mb-1">Billing Details:</h6>
+            {% if order.buyer_company_name %}
+              <div class="fw-bold text-dark">{{ order.buyer_company_name }}</div>
+              <div class="text-muted">GSTIN: <strong>{{ order.buyer_gstin or 'N/A' }}</strong></div>
+              <span class="badge bg-primary-subtle text-primary mt-1">Wholesale Tax Invoice</span>
+            {% else %}
+              <div class="fw-bold text-dark">{{ order.shipping_name }}</div>
+              <span class="badge bg-success-subtle text-success mt-1">Retail B2C Invoice</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Column -->
+    <div class="col-lg-4">
+      <div class="bg-white rounded-4 border p-4 shadow-sm position-sticky" style="top: 90px;">
+        <h5 class="fw-bold mb-3">Payment Summary</h5>
+
+        <div class="d-flex justify-content-between py-2 border-bottom small">
+          <span class="text-muted">Subtotal:</span>
+          <span>{{ order.subtotal|currency }}</span>
+        </div>
+
+        {% if order.discount_amount > 0 %}
+          <div class="d-flex justify-content-between py-2 border-bottom text-success small">
+            <span>Coupon Discount ({{ order.coupon_code or 'PROMO' }}):</span>
+            <strong>- {{ order.discount_amount|currency }}</strong>
+          </div>
+        {% endif %}
+
+        <div class="d-flex justify-content-between py-2 border-bottom small">
+          <span class="text-muted">Delivery Charges:</span>
+          <span>{{ 'FREE' if order.delivery_fee == 0 else order.delivery_fee|currency }}</span>
+        </div>
+
+        <div class="d-flex justify-content-between py-2 border-bottom small">
+          <span class="text-muted">Included GST (Approx):</span>
+          <span>{{ order.tax_amount|currency }}</span>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center py-3 my-2 border-bottom">
+          <span class="h6 fw-bold mb-0">Grand Total:</span>
+          <span class="h4 fw-bold text-success mb-0">{{ order.grand_total|currency }}</span>
+        </div>
+
+        <div class="small mb-3">
+          <div class="text-muted">Payment Mode: <strong>{{ order.payment_method }}</strong></div>
+          <div class="text-muted">Payment Status: 
+            <span class="badge {{ 'bg-success' if order.payment_status == 'Paid' else 'bg-warning text-dark' }}">
+              {{ order.payment_status }}
+            </span>
+          </div>
+          {% if order.payment_ref %}
+            <div class="text-muted mt-1 extra-small">Ref: {{ order.payment_ref }}</div>
+          {% endif %}
+        </div>
+
+        <div class="alert alert-light border small text-muted mb-0">
+          <i class="bi bi-clock-history me-1 text-primary"></i> Need help with this order? Call {{ store_settings.get('store_phone', '+91 98765 43210') }}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

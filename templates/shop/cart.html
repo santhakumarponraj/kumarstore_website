@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Shopping Cart - Kumar Store{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{{ url_for('shop.index') }}" class="text-decoration-none text-muted">Home</a></li>
+      <li class="breadcrumb-item active text-success fw-bold" aria-current="page">Shopping Cart</li>
+    </ol>
+  </nav>
+
+  <h1 class="h3 fw-bold mb-4">Your Shopping Cart</h1>
+
+  <!-- MOQ Error Banners -->
+  {% if moq_errors %}
+    <div class="alert alert-warning shadow-sm border-warning">
+      <h6 class="fw-bold mb-2"><i class="bi bi-exclamation-triangle-fill me-2"></i> B2B Wholesale Minimum Order Quantity Alert:</h6>
+      <ul class="mb-0 small ps-3">
+        {% for err in moq_errors %}
+          <li>{{ err }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  {% if items %}
+    <div class="row g-4">
+      
+      <!-- Cart Items Table Column -->
+      <div class="col-lg-8">
+        <div class="bg-white rounded-4 border p-3 p-md-4 shadow-sm mb-4">
+          <div class="table-responsive">
+            <table class="table align-middle mb-0">
+              <thead class="table-light small text-uppercase text-muted">
+                <tr>
+                  <th style="min-width: 240px;">Product &amp; Unit</th>
+                  <th>Price</th>
+                  <th style="min-width: 140px;">Quantity</th>
+                  <th>Total</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in items %}
+                  <tr>
+                    <td>
+                      <div class="d-flex align-items-center gap-3">
+                        <img src="{{ item.image_url or url_for('static', filename='img/fallback.svg') }}" 
+                             alt="{{ item.product_name }}" 
+                             class="rounded-3 border fallback-capable"
+                             style="width: 55px; height: 55px; object-fit: contain; padding: 2px;"
+                             onerror="if(!this.dataset.fallbackApplied){this.dataset.fallbackApplied='true';this.src='/static/img/fallback.svg';}">
+                        <div>
+                          <a href="{{ url_for('shop.product_detail', slug=item.product_slug) }}" class="fw-bold text-dark text-decoration-none d-block">
+                            {{ item.product_name }}
+                          </a>
+                          <div class="small text-muted">
+                            Packaging: <strong>{{ item.unit_name }}</strong>
+                            {% if item.mode == 'b2b' %}
+                              <span class="badge bg-primary-subtle text-primary ms-1">Wholesale Mode</span>
+                            {% else %}
+                              <span class="badge bg-success-subtle text-success ms-1">Retail</span>
+                            {% endif %}
+                          </div>
+                          {% if item.mode == 'b2b' and item.moq > 1 %}
+                            <span class="extra-small text-primary fw-bold" style="font-size: 0.72rem;">MOQ: {{ item.moq }} units</span>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="fw-bold text-dark">{{ item.unit_price|currency }}</div>
+                      {% if item.mrp > item.unit_price %}
+                        <div class="small text-muted text-decoration-line-through">{{ item.mrp|currency }}</div>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <div class="qty-counter-group" style="height: 34px;">
+                        <input type="number" 
+                               class="qty-input cart-item-qty" 
+                               data-cart-id="{{ item.cart_id }}" 
+                               value="{{ item.quantity }}" 
+                               min="{{ item.moq if item.mode == 'b2b' else 1 }}" 
+                               max="{{ item.stock_qty }}">
+                      </div>
+                    </td>
+                    <td>
+                      <strong class="text-success">{{ item.line_total|currency }}</strong>
+                    </td>
+                    <td>
+                      <button type="button" class="btn btn-sm btn-outline-danger border-0 cart-item-remove" data-cart-id="{{ item.cart_id }}" title="Remove item">
+                        <i class="bi bi-trash fs-5"></i>
+                      </button>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Coupon Application Box -->
+        <div class="bg-white rounded-4 border p-4 shadow-sm mb-4">
+          <h6 class="fw-bold mb-3"><i class="bi bi-tag-fill text-success me-2"></i> Apply Discount Coupon</h6>
+          <form id="coupon-form" class="row g-2 align-items-center">
+            <div class="col-8 col-sm-9">
+              <input type="text" id="coupon-code-input" class="form-control text-uppercase fw-bold" 
+                     placeholder="Enter code e.g. KUMAR10, B2BBULK5" 
+                     value="{{ applied_coupon.code if applied_coupon else '' }}" required>
+            </div>
+            <div class="col-4 col-sm-3">
+              <button type="submit" class="btn btn-success w-100 fw-bold">Apply</button>
+            </div>
+          </form>
+          {% if applied_coupon %}
+            <div class="alert alert-success mt-3 mb-0 py-2 small d-flex justify-content-between align-items-center">
+              <div>
+                <i class="bi bi-check-circle-fill me-1"></i> Coupon <strong>{{ applied_coupon.code }}</strong> applied! ({{ applied_coupon.description }})
+              </div>
+            </div>
+          {% endif %}
+        </div>
+
+      </div>
+
+      <!-- Order Summary Card Column -->
+      <div class="col-lg-4">
+        <div class="bg-white rounded-4 border p-4 shadow-sm position-sticky" style="top: 90px;">
+          <h5 class="fw-bold mb-3">Order Summary</h5>
+          
+          <div class="d-flex justify-content-between py-2 border-bottom small">
+            <span class="text-muted">Total MRP:</span>
+            <span class="text-muted text-decoration-line-through">{{ total_mrp|currency }}</span>
+          </div>
+
+          <div class="d-flex justify-content-between py-2 border-bottom">
+            <span>Subtotal (Catalog):</span>
+            <strong class="text-dark">{{ subtotal|currency }}</strong>
+          </div>
+
+          {% if coupon_discount > 0 %}
+          <div class="d-flex justify-content-between py-2 border-bottom text-success small">
+            <span>Coupon Discount:</span>
+            <strong>- {{ coupon_discount|currency }}</strong>
+          </div>
+          {% endif %}
+
+          <div class="d-flex justify-content-between py-2 border-bottom small">
+            <span>Delivery Charges:</span>
+            <span>
+              {% if delivery_fee == 0 %}
+                <strong class="text-success">FREE</strong>
+              {% else %}
+                <strong>{{ delivery_fee|currency }}</strong>
+              {% endif %}
+            </span>
+          </div>
+
+          <!-- Free Shipping Progress -->
+          {% if subtotal < free_threshold %}
+            <div class="alert alert-info py-2 small mt-3 mb-0" style="font-size: 0.8rem;">
+              <i class="bi bi-info-circle-fill me-1"></i> Add <strong>{{ (free_threshold - subtotal)|currency }}</strong> more to qualify for <strong>FREE Delivery</strong>!
+            </div>
+          {% endif %}
+
+          <div class="d-flex justify-content-between align-items-center py-3 my-2 border-bottom">
+            <span class="h6 fw-bold mb-0">Grand Total:</span>
+            <span class="h4 fw-bold text-success mb-0">{{ grand_total|currency }}</span>
+          </div>
+
+          <div class="small text-muted mb-4">
+            <i class="bi bi-shield-check text-success me-1"></i> Inclusive of all applicable taxes &amp; GST breakdown.
+          </div>
+
+          <a href="{{ url_for('shop.checkout') }}" class="btn btn-success btn-lg w-100 fw-bold rounded-pill py-3 shadow">
+            Proceed to Checkout <i class="bi bi-arrow-right ms-2"></i>
+          </a>
+
+          <a href="{{ url_for('shop.index') }}" class="btn btn-link text-muted small w-100 text-center mt-2 text-decoration-none">
+            <i class="bi bi-arrow-left me-1"></i> Continue Shopping
+          </a>
+        </div>
+      </div>
+
+    </div>
+  {% else %}
+    <div class="text-center py-5 bg-white rounded-4 border shadow-sm">
+      <i class="bi bi-cart-x text-muted display-2 mb-3 d-block"></i>
+      <h3 class="fw-bold">Your Cart is Currently Empty</h3>
+      <p class="text-muted small">Explore our 10 fresh grocery categories and add items to your cart.</p>
+      <a href="{{ url_for('shop.index') }}#categories" class="btn btn-success rounded-pill px-4 py-2 fw-bold">Start Shopping</a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

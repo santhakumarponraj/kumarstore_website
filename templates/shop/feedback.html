@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Feedback & Reviews - Kumar Store{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{{ url_for('shop.index') }}" class="text-decoration-none text-muted">Home</a></li>
+      <li class="breadcrumb-item active text-success fw-bold" aria-current="page">Reviews &amp; Feedback</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4 g-lg-5">
+    
+    <!-- Left: Feedback Submission Form -->
+    <div class="col-lg-5">
+      <div class="bg-white rounded-4 border p-4 p-md-5 shadow-sm">
+        <h2 class="h4 fw-bold mb-2">We Value Your Feedback</h2>
+        <p class="text-muted small mb-4">
+          Help us improve your grocery shopping experience. Share your reviews on product freshness, wholesale pricing, or delivery speed.
+        </p>
+
+        <form action="{{ url_for('shop.feedback') }}" method="POST">
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Full Name *</label>
+            <input type="text" name="name" class="form-control" value="{{ current_user.name if current_user else '' }}" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Email Address *</label>
+            <input type="email" name="email" class="form-control" value="{{ current_user.email if current_user else '' }}" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Overall Store Rating *</label>
+            <select name="rating" class="form-select">
+              <option value="5">★★★★★ (5 Stars - Outstanding)</option>
+              <option value="4">★★★★☆ (4 Stars - Great Service)</option>
+              <option value="3">★★★☆☆ (3 Stars - Satisfactory)</option>
+              <option value="2">★★☆☆☆ (2 Stars - Needs Improvement)</option>
+              <option value="1">★☆☆☆☆ (1 Star - Poor Experience)</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Feedback Subject</label>
+            <input type="text" name="subject" class="form-control" placeholder="e.g. Excellent Dal quality and fast dispatch">
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label small fw-bold">Your Review Comments *</label>
+            <textarea name="comment" rows="4" class="form-control" placeholder="Tell us how we can serve your grocery needs better..." required></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-success btn-lg w-100 fw-bold rounded-pill">
+            Submit Feedback <i class="bi bi-send ms-1"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right: Verified Community Reviews -->
+    <div class="col-lg-7">
+      <div class="bg-white rounded-4 border p-4 p-md-5 shadow-sm">
+        <h3 class="h4 fw-bold mb-4">What Our Retail &amp; Wholesale Customers Say</h3>
+        
+        {% if reviews %}
+          {% for r in reviews %}
+            <div class="border-bottom pb-3 mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="fw-bold text-dark fs-6">{{ r.name }}</span>
+                <span class="text-muted small">{{ r.created_at|format_date('%d %b %Y') }}</span>
+              </div>
+              <div class="text-warning mb-2">
+                {% for i in range(r.rating) %}★{% endfor %}{% for i in range(5 - r.rating) %}☆{% endfor %}
+              </div>
+              {% if r.subject %}
+                <h6 class="fw-bold text-dark mb-1">{{ r.subject }}</h6>
+              {% endif %}
+              <p class="text-muted small mb-0">{{ r.comment }}</p>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-center py-4 text-muted small">
+            No public reviews posted yet. Be the first to share your thoughts above!
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

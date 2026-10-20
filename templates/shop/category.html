@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }} - Kumar Store{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{{ url_for('shop.index') }}" class="text-decoration-none text-muted">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('shop.index') }}#categories" class="text-decoration-none text-muted">Categories</a></li>
+      <li class="breadcrumb-item active text-success fw-bold" aria-current="page">{{ category.name }}</li>
+    </ol>
+  </nav>
+
+  <!-- Category Header Banner -->
+  <div class="p-4 p-md-5 rounded-4 mb-4 text-white position-relative overflow-hidden shadow-sm" 
+       style="background: linear-gradient(135deg, #059669 0%, #064e3b 100%);">
+    <div class="position-relative" style="z-index: 2; max-width: 650px;">
+      <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold mb-2">Category Showcase</span>
+      <h1 class="fw-bold display-6 mb-2 text-white">{{ category.name }}</h1>
+      <p class="lead mb-0 text-white-50" style="font-size: 1rem;">
+        {{ category.description or 'Explore our farm-picked collection of fresh staples with retail and wholesale packaging.' }}
+      </p>
+    </div>
+    <img src="{{ category.image_url or url_for('static', filename='img/fallback.svg') }}" 
+         alt="{{ category.name }}" 
+         class="position-absolute end-0 top-0 bottom-0 w-50 h-100 object-fit-cover opacity-25"
+         style="mask-image: linear-gradient(to right, transparent, black); -webkit-mask-image: linear-gradient(to right, transparent, black);"
+         onerror="if(!this.dataset.fallbackApplied){this.dataset.fallbackApplied='true';this.src='/static/img/fallback.svg';}">
+  </div>
+
+  <!-- Filter & Sort Bar -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center bg-white p-3 rounded-3 border mb-4 gap-3 shadow-sm">
+    <div class="small text-muted">
+      Showing <strong class="text-dark">{{ products|length }}</strong> products in <strong>{{ category.name }}</strong>
+      {% if active_mode == 'b2b' %}
+        <span class="badge bg-primary ms-2"><i class="bi bi-box-seam me-1"></i> B2B Wholesale Pricing Active</span>
+      {% else %}
+        <span class="badge bg-success ms-2"><i class="bi bi-shop me-1"></i> B2C Retail Pricing Active</span>
+      {% endif %}
+    </div>
+
+    <!-- Sorting Selector -->
+    <div class="d-flex align-items-center gap-2">
+      <label for="sortSelector" class="small fw-bold text-muted text-nowrap mb-0">Sort By:</label>
+      <select id="sortSelector" class="form-select form-select-sm" style="width: 190px;" onchange="window.location.href=this.value;">
+        <option value="{{ url_for('shop.category_products', slug=category.slug, sort='featured') }}" {{ 'selected' if current_sort == 'featured' else '' }}>Featured</option>
+        <option value="{{ url_for('shop.category_products', slug=category.slug, sort='price_low') }}" {{ 'selected' if current_sort == 'price_low' else '' }}>Price: Low to High</option>
+        <option value="{{ url_for('shop.category_products', slug=category.slug, sort='price_high') }}" {{ 'selected' if current_sort == 'price_high' else '' }}>Price: High to Low</option>
+        <option value="{{ url_for('shop.category_products', slug=category.slug, sort='name') }}" {{ 'selected' if current_sort == 'name' else '' }}>Product Name</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Products Grid -->
+  {% if products %}
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 g-md-4">
+      {% for product in products %}
+        <div class="col">
+          {% include 'components/product_card.html' %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-5 bg-white rounded-3 border">
+      <i class="bi bi-inbox text-muted display-4 mb-3 d-block"></i>
+      <h5>No products found in this category</h5>
+      <p class="text-muted small">We are updating fresh batches for this category. Check back soon!</p>
+      <a href="{{ url_for('shop.index') }}" class="btn btn-success btn-sm rounded-pill px-4">Browse All Categories</a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

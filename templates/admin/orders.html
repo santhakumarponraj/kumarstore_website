@@ -1,0 +1,102 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Manage Orders - Kumar Store Admin{% endblock %}
+{% block header_title %}Order Management &amp; Fulfillment{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+  <div>
+    <h4 class="fw-bold mb-1">Customer Orders</h4>
+    <span class="text-muted small">Live fulfillment status transitions and GST invoice generation</span>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="bg-white p-3 rounded-4 border mb-4 shadow-sm">
+  <form action="{{ url_for('admin.orders') }}" method="GET" class="row g-2 align-items-center">
+    <div class="col-md-5">
+      <select name="status" class="form-select">
+        <option value="">All Fulfillment Statuses</option>
+        {% for st in ['Order Placed', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'] %}
+          <option value="{{ st }}" {{ 'selected' if current_status == st else '' }}>{{ st }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-5">
+      <select name="order_type" class="form-select">
+        <option value="">All Order Channels (B2C &amp; B2B)</option>
+        <option value="b2c" {{ 'selected' if current_type == 'b2c' else '' }}>B2C Retail Orders Only</option>
+        <option value="b2b" {{ 'selected' if current_type == 'b2b' else '' }}>B2B Wholesale Orders Only</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-primary w-100 fw-bold">Filter</button>
+    </div>
+  </form>
+</div>
+
+<!-- Orders Table -->
+<div class="bg-white rounded-4 border shadow-sm overflow-hidden">
+  <div class="table-responsive">
+    <table class="table align-middle table-hover mb-0">
+      <thead class="table-light small text-uppercase text-muted">
+        <tr>
+          <th>Order #</th>
+          <th>Customer</th>
+          <th>Date</th>
+          <th>Channel</th>
+          <th>Total</th>
+          <th>Payment</th>
+          <th>Status Transition</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+          <tr>
+            <td>
+              <a href="{{ url_for('admin.order_view', id=o.id) }}" class="fw-bold text-dark text-decoration-none">
+                {{ o.order_number }}
+              </a>
+            </td>
+            <td>
+              <div class="fw-bold text-dark small">{{ o.customer_name }}</div>
+              <span class="text-muted extra-small" style="font-size: 0.75rem;">{{ o.customer_phone }}</span>
+            </td>
+            <td class="small text-muted">{{ o.created_at|format_date('%d %b %Y') }}</td>
+            <td>
+              <span class="badge {{ 'bg-primary' if o.order_type == 'b2b' else 'bg-success' }}">
+                {{ o.order_type.upper() }}
+              </span>
+            </td>
+            <td><strong class="text-success">{{ o.grand_total|currency }}</strong></td>
+            <td>
+              <span class="badge {{ 'bg-success-subtle text-success' if o.payment_status == 'Paid' else 'bg-warning-subtle text-warning-emphasis' }} border">
+                {{ o.payment_method }} ({{ o.payment_status }})
+              </span>
+            </td>
+            <td>
+              <form action="{{ url_for('admin.order_status_update', id=o.id) }}" method="POST" class="d-inline">
+                <select name="order_status" class="form-select form-select-sm order-status-select py-1" 
+                        data-current-status="{{ o.order_status }}" style="width: 150px;">
+                  {% for st in ['Order Placed', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'] %}
+                    <option value="{{ st }}" {{ 'selected' if o.order_status == st else '' }}>{{ st }}</option>
+                  {% endfor %}
+                </select>
+              </form>
+            </td>
+            <td class="text-end">
+              <a href="{{ url_for('admin.order_view', id=o.id) }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 me-1">
+                Details
+              </a>
+              <a href="{{ url_for('shop.order_invoice', order_id=o.id) }}" class="btn btn-sm btn-outline-dark rounded-pill px-2" target="_blank" title="Invoice">
+                <i class="bi bi-printer"></i>
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

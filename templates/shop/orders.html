@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}My Orders - Kumar Store{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+
+  <!-- Breadcrumbs -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{{ url_for('shop.index') }}" class="text-decoration-none text-muted">Home</a></li>
+      <li class="breadcrumb-item active text-success fw-bold" aria-current="page">My Orders</li>
+    </ol>
+  </nav>
+
+  <h1 class="h3 fw-bold mb-4">Order History &amp; Tracking</h1>
+
+  {% if orders %}
+    <div class="row g-3">
+      {% for order in orders %}
+        <div class="col-12">
+          <div class="bg-white rounded-4 border p-4 shadow-sm">
+            <div class="row align-items-center g-3">
+              
+              <!-- Order Info -->
+              <div class="col-md-3">
+                <span class="badge {{ 'bg-primary-subtle text-primary' if order.order_type == 'b2b' else 'bg-success-subtle text-success' }} mb-1">
+                  {{ order.order_type.upper() }} Order
+                </span>
+                <h6 class="fw-bold mb-1 text-dark">{{ order.order_number }}</h6>
+                <div class="small text-muted">{{ order.created_at|format_date }}</div>
+              </div>
+
+              <!-- Status Badge -->
+              <div class="col-md-3">
+                <div class="small text-muted mb-1">Fulfillment Status:</div>
+                <span class="badge 
+                  {% if order.order_status == 'Delivered' %}bg-success
+                  {% elif order.order_status == 'Cancelled' %}bg-danger
+                  {% elif order.order_status in ('Shipped', 'Out for Delivery') %}bg-primary
+                  {% else %}bg-warning text-dark{% endif %} px-3 py-1">
+                  {{ order.order_status }}
+                </span>
+              </div>
+
+              <!-- Total & Payment -->
+              <div class="col-md-2">
+                <div class="small text-muted mb-1">Total Amount:</div>
+                <h6 class="fw-bold text-success mb-0">{{ order.grand_total|currency }}</h6>
+                <span class="extra-small text-muted" style="font-size: 0.72rem;">{{ order.payment_method }} ({{ order.payment_status }})</span>
+              </div>
+
+              <!-- Action Links -->
+              <div class="col-md-4 text-md-end">
+                <a href="{{ url_for('shop.order_track', order_id=order.id) }}" class="btn btn-outline-success btn-sm rounded-pill px-3 me-1">
+                  <i class="bi bi-geo-alt me-1"></i> Track
+                </a>
+                <a href="{{ url_for('shop.order_detail', order_id=order.id) }}" class="btn btn-light btn-sm rounded-pill px-3 me-1 border">
+                  Details
+                </a>
+                <a href="{{ url_for('shop.order_invoice', order_id=order.id) }}" class="btn btn-outline-dark btn-sm rounded-pill px-2 border" target="_blank" title="Print Invoice">
+                  <i class="bi bi-printer"></i>
+                </a>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-5 bg-white rounded-4 border shadow-sm">
+      <i class="bi bi-bag-x text-muted display-3 mb-3 d-block"></i>
+      <h4 class="fw-bold">No Past Orders Found</h4>
+      <p class="text-muted small">You haven't placed any grocery orders yet. Start exploring our catalog today!</p>
+      <a href="{{ url_for('shop.index') }}" class="btn btn-success btn-sm rounded-pill px-4 py-2 fw-bold">Start Shopping</a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

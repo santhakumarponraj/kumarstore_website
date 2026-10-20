@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account - Kumar Store{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      
+      <div class="bg-white rounded-4 border p-4 p-md-5 shadow-sm">
+        
+        <!-- Header -->
+        <div class="text-center mb-4">
+          <div class="brand-logo-icon mx-auto mb-2" style="width: 50px; height: 50px; font-size: 1.6rem;">
+            <i class="bi bi-person-plus-fill"></i>
+          </div>
+          <h1 class="h3 fw-bold text-dark mb-1">Create Account</h1>
+          <p class="text-muted small">Join Kumar Store for daily retail and wholesale groceries</p>
+        </div>
+
+        <form action="{{ url_for('auth.register') }}" method="POST">
+          
+          <!-- Account Type Selector -->
+          <div class="mb-4">
+            <label class="form-label small fw-bold text-dark d-block">Select Account Type:</label>
+            <div class="row g-2">
+              <div class="col-6">
+                <input type="radio" class="btn-check" name="account_type" id="acc_b2c" value="b2c" {{ 'checked' if account_type != 'b2b' else '' }}>
+                <label class="btn btn-outline-success w-100 py-2 fw-bold text-center" for="acc_b2c">
+                  <i class="bi bi-person me-1"></i> Retail (B2C)
+                </label>
+              </div>
+              <div class="col-6">
+                <input type="radio" class="btn-check" name="account_type" id="acc_b2b" value="b2b" {{ 'checked' if account_type == 'b2b' else '' }}>
+                <label class="btn btn-outline-primary w-100 py-2 fw-bold text-center" for="acc_b2b">
+                  <i class="bi bi-building me-1"></i> Wholesale (B2B)
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- B2B Wholesale Fields (Dynamic) -->
+          <div id="b2bFieldsBox" class="p-3 bg-light rounded-3 border mb-3" style="display: {{ 'block' if account_type == 'b2b' else 'none' }};">
+            <h6 class="fw-bold text-primary mb-2"><i class="bi bi-briefcase-fill me-1"></i> Wholesale Business Credentials</h6>
+            <div class="mb-2">
+              <label class="form-label small fw-bold">Company / Trade Name *</label>
+              <input type="text" name="company_name" id="companyNameInput" class="form-control form-control-sm" placeholder="e.g. Sri Krishna Supermarket Pvt Ltd">
+            </div>
+            <div>
+              <label class="form-label small fw-bold">GSTIN Number (Optional, for 100% Tax Credit)</label>
+              <input type="text" name="gstin" class="form-control form-control-sm text-uppercase" placeholder="33AAAAA0000A1Z5">
+            </div>
+          </div>
+
+          <!-- Personal Information -->
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Full Name *</label>
+              <input type="text" name="name" class="form-control" placeholder="Ramesh Kumar" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Phone Number *</label>
+              <input type="tel" name="phone" class="form-control" placeholder="9876543210" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Email Address *</label>
+              <input type="email" name="email" class="form-control" placeholder="ramesh@example.com" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Create Password *</label>
+              <input type="password" name="password" class="form-control" placeholder="Minimum 6 characters" required>
+            </div>
+          </div>
+
+          <!-- Address Fields -->
+          <div class="row g-3 mb-4">
+            <div class="col-12">
+              <label class="form-label small fw-bold">Delivery Address</label>
+              <input type="text" name="address" class="form-control" placeholder="Door No, Street Name, Landmark">
+            </div>
+            <div class="col-md-5">
+              <label class="form-label small fw-bold">City / Town</label>
+              <input type="text" name="city" class="form-control" value="Chennai">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold">State</label>
+              <input type="text" name="state" class="form-control" value="Tamil Nadu">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-bold">PIN Code</label>
+              <input type="text" name="pincode" class="form-control" placeholder="600001">
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-success btn-lg w-100 fw-bold rounded-pill mb-3 shadow-sm">
+            Create Account &amp; Start Shopping <i class="bi bi-arrow-right ms-1"></i>
+          </button>
+        </form>
+
+        <div class="text-center small text-muted">
+          Already have an account? 
+          <a href="{{ url_for('auth.login') }}" class="text-success fw-bold text-decoration-none">Sign In</a>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  const b2cRadio = document.getElementById('acc_b2c');
+  const b2bRadio = document.getElementById('acc_b2b');
+  const b2bBox = document.getElementById('b2bFieldsBox');
+  const compInput = document.getElementById('companyNameInput');
+
+  function updateB2BVisibility() {
+    if (b2bRadio.checked) {
+      b2bBox.style.display = 'block';
+      compInput.required = true;
+    } else {
+      b2bBox.style.display = 'none';
+      compInput.required = false;
+    }
+  }
+
+  b2cRadio.addEventListener('change', updateB2BVisibility);
+  b2bRadio.addEventListener('change', updateB2BVisibility);
+  updateB2BVisibility();
+</script>
+{% endblock %}

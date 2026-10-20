@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Kumar Store{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-md-7 col-lg-5">
+      
+      <div class="bg-white rounded-4 border p-4 p-md-5 shadow-sm">
+        
+        <!-- Header -->
+        <div class="text-center mb-4">
+          <div class="brand-logo-icon mx-auto mb-2" style="width: 50px; height: 50px; font-size: 1.6rem;">
+            <i class="bi bi-person-fill"></i>
+          </div>
+          <h1 class="h3 fw-bold text-dark mb-1">Welcome Back</h1>
+          <p class="text-muted small">Sign in to your Kumar Store account</p>
+        </div>
+
+        <!-- Role Tabs: B2C Retail vs B2B Wholesale -->
+        <ul class="nav nav-pills nav-fill mb-4 p-1 bg-light rounded-pill border" id="loginTypeTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-pill py-2 small fw-bold {{ 'active bg-success text-white' if requested_mode != 'b2b' else 'text-dark' }}" 
+                    id="b2c-tab" data-bs-toggle="pill" data-bs-target="#b2c-login" type="button" role="tab">
+              <i class="bi bi-cart me-1"></i> Retail (B2C)
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-pill py-2 small fw-bold {{ 'active bg-primary text-white' if requested_mode == 'b2b' else 'text-dark' }}" 
+                    id="b2b-tab" data-bs-toggle="pill" data-bs-target="#b2b-login" type="button" role="tab">
+              <i class="bi bi-building me-1"></i> Wholesale (B2B)
+            </button>
+          </li>
+        </ul>
+
+        <form action="{{ url_for('auth.login', next=request.args.get('next', '')) }}" method="POST">
+          <input type="hidden" name="mode" id="selectedModeInput" value="{{ requested_mode or 'b2c' }}">
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-dark">Email Address</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
+              <input type="email" name="email" class="form-control" placeholder="name@example.com" required autofocus>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <label class="form-label small fw-bold text-dark mb-0">Password</label>
+            </div>
+            <div class="input-group mt-1">
+              <span class="input-group-text bg-light"><i class="bi bi-lock"></i></span>
+              <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-success btn-lg w-100 fw-bold rounded-pill mb-3 shadow-sm">
+            Sign In <i class="bi bi-box-arrow-in-right ms-1"></i>
+          </button>
+        </form>
+
+        <div class="text-center small text-muted">
+          Don't have an account yet? 
+          <a href="{{ url_for('auth.register') }}" class="text-success fw-bold text-decoration-none">Sign Up Here</a>
+        </div>
+
+        <!-- Test Accounts Helper Box -->
+        <div class="mt-4 p-3 bg-light rounded-3 border small">
+          <div class="fw-bold text-dark mb-1"><i class="bi bi-key-fill text-warning me-1"></i> Demo Credentials:</div>
+          <div class="extra-small text-muted mb-1" style="font-size: 0.78rem;">
+            <strong>Admin:</strong> <code>admin@kumarstore.com</code> / <code>Admin@123</code>
+          </div>
+          <div class="extra-small text-muted mb-1" style="font-size: 0.78rem;">
+            <strong>Retail (B2C):</strong> <code>user@kumarstore.com</code> / <code>User@123</code>
+          </div>
+          <div class="extra-small text-muted" style="font-size: 0.78rem;">
+            <strong>Wholesale (B2B):</strong> <code>wholesale@kumarstore.com</code> / <code>B2B@123</code>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.getElementById('b2c-tab').addEventListener('click', () => {
+    document.getElementById('selectedModeInput').value = 'b2c';
+  });
+  document.getElementById('b2b-tab').addEventListener('click', () => {
+    document.getElementById('selectedModeInput').value = 'b2b';
+  });
+</script>
+{% endblock %}

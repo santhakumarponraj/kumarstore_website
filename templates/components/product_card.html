@@ -1,0 +1,139 @@
+<!-- ==========================================================
+     STANDARDIZED PRODUCT DISPLAY CARD
+     Multi-unit variant selector, Dynamic B2C/B2B price, Live stock badge,
+     + / - Qty counter, Wishlist heart toggle, Image fallback
+     ========================================================== -->
+<div class="product-card" data-product-id="{{ product.id }}">
+  
+  <!-- Image & Badges Container -->
+  <div class="product-img-container">
+    <div class="card-badge-top-left">
+      {% set default_u = product.default_unit %}
+      {% if default_u %}
+        {% set def_price = default_u.b2b_price if active_mode == 'b2b' else default_u.selling_price %}
+        {% if default_u.mrp > def_price %}
+          <span class="discount-tag">
+            {{ default_u.mrp|discount_pct(def_price) }}% OFF
+          </span>
+        {% else %}
+          <span class="discount-tag" style="display: none;"></span>
+        {% endif %}
+      {% endif %}
+    </div>
+
+    <!-- Stock Status Badge -->
+    <div style="position: absolute; bottom: 8px; left: 8px; z-index: 2;">
+      {% if default_u %}
+        {% if default_u.stock_qty <= 0 %}
+          <span class="stock-tag stock-out">Out of Stock</span>
+        {% elif default_u.stock_qty < 10 %}
+          <span class="stock-tag stock-low">Low Stock ({{ default_u.stock_qty }} left)</span>
+        {% else %}
+          <span class="stock-tag stock-in">In Stock</span>
+        {% endif %}
+      {% endif %}
+    </div>
+
+    <!-- Wishlist Heart Toggle Icon -->
+    <button type="button" class="wishlist-btn {{ 'active' if product.in_wishlist else '' }}" 
+            data-product-id="{{ product.id }}" title="Save to wishlist">
+      <i class="bi {{ 'bi-heart-fill' if product.in_wishlist else 'bi-heart' }}"></i>
+    </button>
+
+    <!-- Product Image with Static Fallback -->
+    <a href="{{ url_for('shop.product_detail', slug=product.slug) }}">
+      <img src="{{ product.image_url or url_for('static', filename='img/fallback.svg') }}" 
+           alt="{{ product.name }}" 
+           class="product-img fallback-capable"
+           onerror="if(!this.dataset.fallbackApplied){this.dataset.fallbackApplied='true';this.src='/static/img/fallback.svg';}">
+    </a>
+  </div>
+
+  <!-- Product Card Body -->
+  <div class="product-card-body">
+    
+    <!-- Category Tag -->
+    <div class="product-cat-name">{{ product.category_name }}</div>
+
+    <!-- Title -->
+    <h3 class="product-card-title">
+      <a href="{{ url_for('shop.product_detail', slug=product.slug) }}">
+        {{ product.name }}
+      </a>
+    </h3>
+
+    <!-- Unit Variant Selector Dropdown -->
+    <div class="variant-selector-wrapper mb-2">
+      <select class="form-select unit-select-box" aria-label="Select unit packaging">
+        {% for unit in product.units %}
+          {% set unit_price = unit.b2b_price if active_mode == 'b2b' else unit.selling_price %}
+          <option value="{{ unit.id }}" 
+                  data-price="{{ unit_price }}" 
+                  data-mrp="{{ unit.mrp }}" 
+                  data-moq="{{ unit.moq if active_mode == 'b2b' else 1 }}"
+                  data-stock="{{ unit.stock_qty }}"
+                  data-unit-type="{{ unit.unit_type }}"
+                  {{ 'selected' if (product.default_unit and product.default_unit.id == unit.id) else '' }}>
+            {{ unit.unit_name }} — {{ unit_price|currency }}
+            {% if active_mode == 'b2b' and unit.moq > 1 %}
+              (MOQ: {{ unit.moq }})
+            {% endif %}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Pricing Row -->
+    <div class="price-section">
+      <span class="current-price">
+        {% if product.default_unit %}
+          {{ (product.default_unit.b2b_price if active_mode == 'b2b' else product.default_unit.selling_price)|currency }}
+        {% else %}
+          ₹ 0.00
+        {% endif %}
+      </span>
+      <span class="mrp-price" style="{{ 'display: inline;' if (product.default_unit and product.default_unit.mrp > (product.default_unit.b2b_price if active_mode == 'b2b' else product.default_unit.selling_price)) else 'display: none;' }}">
+        {% if product.default_unit and product.default_unit.mrp > (product.default_unit.b2b_price if active_mode == 'b2b' else product.default_unit.selling_price) %}
+          {{ product.default_unit.mrp|currency }}
+        {% endif %}
+      </span>
+    </div>
+
+    <!-- MOQ indicator for Wholesale mode -->
+    <div class="moq-indicator" style="{{ 'display: inline-block;' if (active_mode == 'b2b' and product.default_unit and product.default_unit.moq > 1) else 'display: none;' }}">
+      {% if active_mode == 'b2b' and product.default_unit and product.default_unit.moq > 1 %}
+        Min Order (MOQ): {{ product.default_unit.moq }} units
+      {% endif %}
+    </div>
+
+    <!-- Interactive Quantity Adjustment Selector & Add to Cart -->
+    <div class="card-action-row">
+      <div class="qty-counter-group">
+        <button type="button" class="qty-btn qty-minus" aria-label="Decrease quantity">
+          <i class="bi bi-dash"></i>
+        </button>
+        <input type="number" 
+               class="qty-input" 
+               value="{{ product.default_unit.moq if (active_mode == 'b2b' and product.default_unit and product.default_unit.moq > 1) else 1 }}" 
+               min="{{ product.default_unit.moq if (active_mode == 'b2b' and product.default_unit and product.default_unit.moq > 1) else 1 }}" 
+               max="{{ product.default_unit.stock_qty if product.default_unit else 100 }}">
+        <button type="button" class="qty-btn qty-plus" aria-label="Increase quantity">
+          <i class="bi bi-plus"></i>
+        </button>
+      </div>
+
+      <button type="button" 
+              class="add-cart-btn" 
+              data-unit-id="{{ product.default_unit.id if product.default_unit else '' }}"
+              {{ 'disabled' if (not product.default_unit or product.default_unit.stock_qty <= 0) else '' }}>
+        {% if product.default_unit and product.default_unit.stock_qty <= 0 %}
+          <i class="bi bi-x-circle me-1"></i> Sold Out
+        {% else %}
+          <i class="bi bi-cart-plus me-1"></i> Add
+        {% endif %}
+      </button>
+    </div>
+
+  </div>
+
+</div>

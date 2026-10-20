@@ -1,0 +1,105 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Manage Products - Kumar Store Admin{% endblock %}
+{% block header_title %}Grocery Catalog Management{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+  <div>
+    <h4 class="fw-bold mb-1">Products &amp; Multi-Unit Variants</h4>
+    <span class="text-muted small">Manage items across all 10 mandatory categories with B2C/B2B pricing</span>
+  </div>
+  <a href="{{ url_for('admin.product_new') }}" class="btn btn-success fw-bold rounded-pill px-4 shadow-sm">
+    <i class="bi bi-plus-circle me-1"></i> Add New Product
+  </a>
+</div>
+
+<!-- Filters Bar -->
+<div class="bg-white p-3 rounded-4 border mb-4 shadow-sm">
+  <form action="{{ url_for('admin.products') }}" method="GET" class="row g-2 align-items-center">
+    <div class="col-md-6">
+      <div class="input-group">
+        <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+        <input type="text" name="search" class="form-control" placeholder="Search by product name or slug..." value="{{ search }}">
+      </div>
+    </div>
+    <div class="col-md-4">
+      <select name="category_id" class="form-select">
+        <option value="">All 10 Categories</option>
+        {% for c in categories %}
+          <option value="{{ c.id }}" {{ 'selected' if category_id|string == c.id|string else '' }}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-primary w-100 fw-bold">Filter</button>
+    </div>
+  </form>
+</div>
+
+<!-- Products Table -->
+<div class="bg-white rounded-4 border shadow-sm overflow-hidden">
+  <div class="table-responsive">
+    <table class="table align-middle table-hover mb-0">
+      <thead class="table-light small text-uppercase text-muted">
+        <tr>
+          <th>Item</th>
+          <th>Category</th>
+          <th>HSN / Tax</th>
+          <th>Units</th>
+          <th>Min Retail</th>
+          <th>Min Wholesale</th>
+          <th>Status</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in products %}
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                <img src="{{ p.image_url or url_for('static', filename='img/fallback.svg') }}" 
+                     alt="{{ p.name }}" 
+                     class="rounded-3 border fallback-capable"
+                     style="width: 45px; height: 45px; object-fit: contain; padding: 2px;"
+                     onerror="if(!this.dataset.fallbackApplied){this.dataset.fallbackApplied='true';this.src='/static/img/fallback.svg';}">
+                <div>
+                  <a href="{{ url_for('admin.product_edit', id=p.id) }}" class="fw-bold text-dark text-decoration-none d-block">
+                    {{ p.name }}
+                  </a>
+                  <span class="extra-small text-muted" style="font-size: 0.75rem;">slug: {{ p.slug }}</span>
+                  {% if p.is_featured %}
+                    <span class="badge bg-warning-subtle text-dark ms-1 extra-small">Featured</span>
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+            <td><span class="badge bg-light text-dark border">{{ p.category_name }}</span></td>
+            <td class="small text-muted">{{ p.hsn_code }} / {{ p.tax_rate }}%</td>
+            <td>
+              <span class="badge bg-info-subtle text-info fw-bold">{{ p.unit_count }} variants</span>
+            </td>
+            <td><strong class="text-success">{{ p.min_b2c_price|currency }}</strong></td>
+            <td><strong class="text-primary">{{ p.min_b2b_price|currency }}</strong></td>
+            <td>
+              <span class="badge {{ 'bg-success' if p.is_active else 'bg-secondary' }}">
+                {{ 'Active' if p.is_active else 'Hidden' }}
+              </span>
+            </td>
+            <td class="text-end">
+              <a href="{{ url_for('admin.product_edit', id=p.id) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 me-1">
+                <i class="bi bi-pencil-square me-1"></i> Edit
+              </a>
+              <form action="{{ url_for('admin.product_delete', id=p.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this product and all associated units?');">
+                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

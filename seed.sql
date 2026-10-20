@@ -10,16 +10,16 @@ INSERT INTO `store_settings` (`setting_key`, `setting_value`, `description`) VAL
 ('site_mode', 'HYBRID', 'Global storefront mode: HYBRID, B2C, or B2B'),
 ('store_name', 'Kumar Store', 'Store brand name'),
 ('store_tagline', 'Fresh Groceries & Wholesale Supplies Daily', 'Store slogan'),
-('store_gstin', '33AAACK8765B1ZG', 'GSTIN identification number for tax invoices'),
-('store_phone', '+91 98765 43210', 'Primary customer care phone number'),
-('store_email', 'support@kumarstore.com', 'Official support email address'),
-('store_address', 'No. 42, Market Road, Commercial Hub, Chennai, Tamil Nadu - 600001', 'Physical store & warehouse address'),
+('store_gstin', '00000000000000', 'GSTIN identification number for tax invoices'),
+('store_phone', '8122687377', 'Primary customer care phone number'),
+('store_email', 'santhakumarponraj@gmail.com', 'Official support email address'),
+('store_address', '81/135, Kuppichipalayam road, Periyanaickenpalayam, Coimbatore - 641020', 'Physical store & warehouse address'),
 ('free_shipping_threshold', '1000.00', 'Minimum order amount for free delivery in retail'),
 ('standard_shipping_fee', '50.00', 'Standard flat delivery charge if below free threshold');
 
 -- 2. Initial Users
 INSERT INTO `users` (`name`, `email`, `password_hash`, `phone`, `role`, `company_name`, `gstin`, `is_b2b_verified`, `address`, `city`, `state`, `pincode`) VALUES
-('Admin Kumar', 'admin@kumarstore.com', 'scrypt:32768:8:1$ei8XU3YRpaD7rLbo$31c564c69196741db188dcde6efd829d4c06e2b1bf7d614d26b3471036707991b1d15506bffa7eeb669aafd487adbc90acba13e1505a7baa48d8766f8949dc3b', '9876543210', 'admin', 'Kumar Store HQ', '33AAACK8765B1ZG', TRUE, '42 Market Road', 'Chennai', 'Tamil Nadu', '600001'),
+('Admin Kumar', 'admin@kumarstore.com', 'scrypt:32768:8:1$ei8XU3YRpaD7rLbo$31c564c69196741db188dcde6efd829d4c06e2b1bf7d614d26b3471036707991b1d15506bffa7eeb669aafd487adbc90acba13e1505a7baa48d8766f8949dc3b', '8122687377', 'admin', 'Kumar Store HQ', '00000000000000', TRUE, '81/135, Kuppichipalayam road, Periyanaickenpalayam', 'Coimbatore', 'Tamil Nadu', '641020'),
 ('Ramesh Kumar (Retail)', 'user@kumarstore.com', 'scrypt:32768:8:1$yeQ7Cw4qYoJuE5eI$bfec64848402344667d8ec50d9e33adcb4698cd96661bdef072990c04c8ded37ef4010a09b926155c3e33bc39cb48ba77ed1655121815df48b0f7350b778d6f8', '9840123456', 'b2c', NULL, NULL, FALSE, '15 Green Park Avenue, Anna Nagar', 'Chennai', 'Tamil Nadu', '600040'),
 ('Sri Krishna Traders (Wholesale)', 'wholesale@kumarstore.com', 'scrypt:32768:8:1$ZhYubTujghIZgJ8M$dc32ad62ae38e00811bddbe1f14c8577392a4d7af6eb6eee7a30e67a0382a9beabf14353f3d6f41d5ccc6729707d60968d11f356a0d05d940f9bf1beb25b863e', '9894098765', 'b2b', 'Sri Krishna Wholesale Traders Pvt Ltd', '33AAAAA0000A1Z5', TRUE, 'Plot 88, Wholesale Grain Mandi, Koyambedu', 'Chennai', 'Tamil Nadu', '600107');
 

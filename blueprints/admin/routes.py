@@ -1,7 +1,30 @@
 import os
+import uuid
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from werkzeug.utils import secure_filename
+from config import Config
 from blueprints.auth.routes import admin_required
 from db import query_db, execute_db
+
+ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
+
+def save_uploaded_image(file_storage, subfolder='products'):
+    """Saves uploaded image file to static/uploads/{subfolder} and returns web path."""
+    if not file_storage or not file_storage.filename:
+        return None
+    if not allowed_file(file_storage.filename):
+        return None
+    
+    filename = secure_filename(file_storage.filename)
+    unique_name = f"{uuid.uuid4().hex[:10]}_{filename}"
+    folder_path = os.path.join(Config.UPLOAD_FOLDER, subfolder)
+    os.makedirs(folder_path, exist_ok=True)
+    full_path = os.path.join(folder_path, unique_name)
+    file_storage.save(full_path)
+    return f"/static/uploads/{subfolder}/{unique_name}"
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -117,7 +140,9 @@ def product_new():
         slug = request.form.get('slug', '').strip().lower().replace(' ', '-')
         category_id = int(request.form.get('category_id', 1))
         description = request.form.get('description', '').strip()
-        image_url = request.form.get('image_url', '').strip() or '/static/img/fallback.svg'
+        
+        uploaded_image = save_uploaded_image(request.files.get('image_file'), subfolder='products')
+        image_url = uploaded_image or request.form.get('image_url', '').strip() or '/static/img/fallback.svg'
         hsn_code = request.form.get('hsn_code', '1006').strip()
         tax_rate = float(request.form.get('tax_rate', 5.0))
         is_featured = bool(request.form.get('is_featured'))
@@ -176,7 +201,11 @@ def product_edit(id):
         slug = request.form.get('slug', '').strip().lower().replace(' ', '-')
         category_id = int(request.form.get('category_id', 1))
         description = request.form.get('description', '').strip()
-        image_url = request.form.get('image_url', '').strip() or '/static/img/fallback.svg'
+        
+        uploaded_image = save_uploaded_image(request.files.get('image_file'), subfolder='products')
+        form_image_url = request.form.get('image_url', '').strip()
+        image_url = uploaded_image or form_image_url or product.get('image_url') or '/static/img/fallback.svg'
+        
         hsn_code = request.form.get('hsn_code', '1006').strip()
         tax_rate = float(request.form.get('tax_rate', 5.0))
         is_featured = bool(request.form.get('is_featured'))
@@ -269,7 +298,8 @@ def categories():
         name = request.form.get('name', '').strip()
         slug = request.form.get('slug', '').strip().lower().replace(' ', '-')
         description = request.form.get('description', '').strip()
-        image_url = request.form.get('image_url', '').strip()
+        uploaded_image = save_uploaded_image(request.files.get('image_file'), subfolder='categories')
+        image_url = uploaded_image or request.form.get('image_url', '').strip() or '/static/img/fallback.svg'
         display_order = int(request.form.get('display_order', 0))
 
         if not name or not slug:
@@ -312,7 +342,8 @@ def banners():
         subtitle = request.form.get('subtitle', '').strip()
         badge_text = request.form.get('badge_text', '').strip()
         coupon_code = request.form.get('coupon_code', '').strip().upper()
-        image_url = request.form.get('image_url', '').strip()
+        uploaded_image = save_uploaded_image(request.files.get('image_file'), subfolder='banners')
+        image_url = uploaded_image or request.form.get('image_url', '').strip()
         link_url = request.form.get('link_url', '/').strip()
         bg_gradient = request.form.get('bg_gradient', 'linear-gradient(135deg, #059669 0%, #065f46 100%)').strip()
         display_order = int(request.form.get('display_order', 0))

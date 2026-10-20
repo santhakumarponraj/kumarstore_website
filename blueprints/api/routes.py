@@ -94,28 +94,64 @@ def add_to_cart():
     return jsonify({
         'success': True,
         'message': f"Added {quantity} x {unit['product_name']} ({unit['unit_name']}) to cart",
-        'cart_count': cart_count
+        'cart_count': cart_count,
+        'unit_id': unit_id,
+        'quantity': new_qty if existing else quantity
     })
 
 @api_bp.route('/cart/update', methods=['POST'])
 def update_cart():
     data = request.get_json() or {}
     cart_id = data.get('cart_id')
+    unit_id = data.get('unit_id')
     quantity = int(data.get('quantity', 1))
 
-    if not cart_id or quantity <= 0:
+    user_id = session.get('user_id')
+    guest_id = session.get('guest_session_id')
+
+    if cart_id:
+        item = query_db(
+            """SELECT c.*, u.moq, u.stock_qty 
+               FROM cart c 
+               JOIN product_units u ON c.unit_id = u.id 
+               WHERE c.id = %s""",
+            (cart_id,),
+            one=True
+        )
+    elif unit_id:
+        if user_id:
+            item = query_db(
+                """SELECT c.*, u.moq, u.stock_qty 
+                   FROM cart c 
+                   JOIN product_units u ON c.unit_id = u.id 
+                   WHERE c.unit_id = %s AND c.user_id = %s""",
+                (unit_id, user_id),
+                one=True
+            )
+        else:
+            item = query_db(
+                """SELECT c.*, u.moq, u.stock_qty 
+                   FROM cart c 
+                   JOIN product_units u ON c.unit_id = u.id 
+                   WHERE c.unit_id = %s AND c.session_id = %s""",
+                (unit_id, guest_id),
+                one=True
+            )
+    else:
         return jsonify({'success': False, 'error': 'Invalid request parameters'}), 400
 
-    item = query_db(
-        """SELECT c.*, u.moq, u.stock_qty 
-           FROM cart c 
-           JOIN product_units u ON c.unit_id = u.id 
-           WHERE c.id = %s""",
-        (cart_id,),
-        one=True
-    )
     if not item:
         return jsonify({'success': False, 'error': 'Cart item not found'}), 404
+
+    # If quantity is <= 0: delete item from cart
+    if quantity <= 0:
+        execute_db("DELETE FROM cart WHERE id = %s", (item['id'],))
+        return jsonify({
+            'success': True,
+            'removed': True,
+            'message': 'Item removed from cart',
+            'cart_count': get_current_cart_count()
+        })
 
     # Enforce MOQ if mode is B2B
     if item['mode'] == 'b2b' and quantity < item['moq']:
@@ -125,9 +161,10 @@ def update_cart():
             'min_qty': item['moq']
         }), 400
 
-    execute_db("UPDATE cart SET quantity = %s WHERE id = %s", (quantity, cart_id))
+    execute_db("UPDATE cart SET quantity = %s WHERE id = %s", (quantity, item['id']))
     return jsonify({
         'success': True,
+        'quantity': quantity,
         'message': 'Cart quantity updated',
         'cart_count': get_current_cart_count()
     })
@@ -136,10 +173,20 @@ def update_cart():
 def remove_from_cart():
     data = request.get_json() or {}
     cart_id = data.get('cart_id')
-    if not cart_id:
-        return jsonify({'success': False, 'error': 'Invalid cart ID'}), 400
+    unit_id = data.get('unit_id')
+    user_id = session.get('user_id')
+    guest_id = session.get('guest_session_id')
 
-    execute_db("DELETE FROM cart WHERE id = %s", (cart_id,))
+    if cart_id:
+        execute_db("DELETE FROM cart WHERE id = %s", (cart_id,))
+    elif unit_id:
+        if user_id:
+            execute_db("DELETE FROM cart WHERE unit_id = %s AND user_id = %s", (unit_id, user_id))
+        elif guest_id:
+            execute_db("DELETE FROM cart WHERE unit_id = %s AND session_id = %s", (unit_id, guest_id))
+    else:
+        return jsonify({'success': False, 'error': 'Invalid cart ID or unit ID'}), 400
+
     return jsonify({
         'success': True,
         'message': 'Item removed from cart',

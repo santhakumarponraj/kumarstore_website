@@ -108,17 +108,18 @@
 
     <!-- Interactive Quantity Adjustment Selector & Add to Cart -->
     <div class="card-action-row">
-      <div class="qty-counter-group">
+      <div class="qty-counter-group" style="display: none;">
         <button type="button" class="qty-btn qty-minus" aria-label="Decrease quantity">
-          <i class="bi bi-dash"></i>
+          <i class="bi bi-dash-lg"></i>
         </button>
         <input type="number" 
                class="qty-input" 
                value="{{ product.default_unit.moq if (active_mode == 'b2b' and product.default_unit and product.default_unit.moq > 1) else 1 }}" 
                min="{{ product.default_unit.moq if (active_mode == 'b2b' and product.default_unit and product.default_unit.moq > 1) else 1 }}" 
-               max="{{ product.default_unit.stock_qty if product.default_unit else 100 }}">
+               max="{{ product.default_unit.stock_qty if product.default_unit else 100 }}"
+               readonly>
         <button type="button" class="qty-btn qty-plus" aria-label="Increase quantity">
-          <i class="bi bi-plus"></i>
+          <i class="bi bi-plus-lg"></i>
         </button>
       </div>
 
@@ -129,7 +130,7 @@
         {% if product.default_unit and product.default_unit.stock_qty <= 0 %}
           <i class="bi bi-x-circle me-1"></i> Sold Out
         {% else %}
-          <i class="bi bi-cart-plus me-1"></i> Add
+          <i class="bi bi-cart-plus me-1"></i> Add to Cart
         {% endif %}
       </button>
     </div>

@@ -76,7 +76,13 @@ function initUnitVariantSelectors() {
       // Update stock badge & Add to cart button state
       const stockTag = card.querySelector('.stock-tag');
       const addBtn = card.querySelector('.add-cart-btn');
+      const qtyGroup = card.querySelector('.qty-counter-group');
       const qtyInput = card.querySelector('.qty-input');
+
+      // Reset card action controls: show Add button, hide counter
+      if (qtyGroup) {
+        qtyGroup.style.display = 'none';
+      }
 
       if (stock <= 0) {
         if (stockTag) {
@@ -85,6 +91,7 @@ function initUnitVariantSelectors() {
         }
         if (addBtn) {
           addBtn.disabled = true;
+          addBtn.style.display = 'inline-flex';
           addBtn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Sold Out';
         }
       } else if (stock < 10) {
@@ -94,7 +101,8 @@ function initUnitVariantSelectors() {
         }
         if (addBtn) {
           addBtn.disabled = false;
-          addBtn.innerHTML = '<i class="bi bi-cart-plus me-1"></i> Add';
+          addBtn.style.display = 'inline-flex';
+          addBtn.innerHTML = '<i class="bi bi-cart-plus me-1"></i> Add to Cart';
         }
       } else {
         if (stockTag) {
@@ -103,7 +111,8 @@ function initUnitVariantSelectors() {
         }
         if (addBtn) {
           addBtn.disabled = false;
-          addBtn.innerHTML = '<i class="bi bi-cart-plus me-1"></i> Add';
+          addBtn.style.display = 'inline-flex';
+          addBtn.innerHTML = '<i class="bi bi-cart-plus me-1"></i> Add to Cart';
         }
       }
 
@@ -121,9 +130,8 @@ function initUnitVariantSelectors() {
       // Sync quantity input min & default value with MOQ
       if (qtyInput) {
         qtyInput.min = moq;
-        if (parseInt(qtyInput.value, 10) < moq) {
-          qtyInput.value = moq;
-        }
+        qtyInput.value = moq;
+        qtyInput.dataset.unitId = unitId;
       }
 
       // Store selected unit_id on the Add to Cart button
@@ -145,26 +153,104 @@ function initQuantityCounters() {
     const minusBtn = group.querySelector('.qty-minus');
     const plusBtn = group.querySelector('.qty-plus');
     const input = group.querySelector('.qty-input');
+    const card = group.closest('.product-card');
 
     if (!minusBtn || !plusBtn || !input) return;
-
-    minusBtn.addEventListener('click', function (e) {
-      e.preventDefault();
-      let min = parseInt(input.min || 1, 10);
-      let current = parseInt(input.value || min, 10);
-      if (current > min) {
-        input.value = current - 1;
-        input.dispatchEvent(new Event('change'));
-      }
-    });
 
     plusBtn.addEventListener('click', function (e) {
       e.preventDefault();
       let current = parseInt(input.value || 1, 10);
       let max = parseInt(input.max || 9999, 10);
       if (current < max) {
-        input.value = current + 1;
-        input.dispatchEvent(new Event('change'));
+        let newVal = current + 1;
+        input.value = newVal;
+
+        // If on product card, sync update to cart
+        if (card) {
+          const unitSelect = card.querySelector('.unit-select-box');
+          const unitId = input.dataset.unitId || (unitSelect ? unitSelect.value : null);
+          if (unitId) {
+            fetch('/api/cart/update', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ unit_id: unitId, quantity: newVal })
+            })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                updateCartBadge(data.cart_count);
+              } else {
+                showToast(data.error || 'Could not update cart', 'error');
+                if (data.min_qty) input.value = data.min_qty;
+              }
+            })
+            .catch(err => console.error(err));
+          }
+        }
+      }
+    });
+
+    minusBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      let min = parseInt(input.min || 1, 10);
+      let current = parseInt(input.value || min, 10);
+
+      if (current > min) {
+        let newVal = current - 1;
+        input.value = newVal;
+
+        // If on product card, sync update to cart
+        if (card) {
+          const unitSelect = card.querySelector('.unit-select-box');
+          const unitId = input.dataset.unitId || (unitSelect ? unitSelect.value : null);
+          if (unitId) {
+            fetch('/api/cart/update', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ unit_id: unitId, quantity: newVal })
+            })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                updateCartBadge(data.cart_count);
+              } else {
+                showToast(data.error || 'Could not update cart', 'error');
+              }
+            })
+            .catch(err => console.error(err));
+          }
+        }
+      } else {
+        // Value is at or below minimum -> Remove from cart and switch back to Add button!
+        if (card) {
+          const unitSelect = card.querySelector('.unit-select-box');
+          const unitId = input.dataset.unitId || (unitSelect ? unitSelect.value : null);
+          const addBtn = card.querySelector('.add-cart-btn');
+
+          if (unitId) {
+            fetch('/api/cart/remove', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ unit_id: unitId })
+            })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                updateCartBadge(data.cart_count);
+                showToast('Item removed from cart', 'info');
+
+                // Hide counter, show add button
+                group.style.display = 'none';
+                if (addBtn) {
+                  addBtn.style.display = 'inline-flex';
+                  addBtn.innerHTML = '<i class="bi bi-cart-plus me-1"></i> Add to Cart';
+                }
+                input.value = min;
+              }
+            })
+            .catch(err => console.error(err));
+          }
+        }
       }
     });
 
@@ -195,6 +281,7 @@ function initAddToCartButtons() {
         unitId = unitSelect.value;
       }
 
+      const qtyGroup = card.querySelector('.qty-counter-group');
       const qtyInput = card.querySelector('.qty-input');
       const quantity = qtyInput ? parseInt(qtyInput.value, 10) : 1;
 
@@ -221,6 +308,19 @@ function initAddToCartButtons() {
         if (data.success) {
           showToast(data.message || 'Added to cart!', 'success');
           updateCartBadge(data.cart_count);
+
+          // Product Card UI Behavior:
+          // add-cart-btn becomes hidden, qty-counter-group becomes visible
+          if (card.classList.contains('product-card')) {
+            this.style.display = 'none';
+            if (qtyGroup) {
+              qtyGroup.style.display = 'inline-flex';
+            }
+            if (qtyInput) {
+              qtyInput.value = data.quantity || quantity;
+              qtyInput.dataset.unitId = unitId;
+            }
+          }
         } else {
           showToast(data.error || 'Failed to add item to cart', 'error');
         }

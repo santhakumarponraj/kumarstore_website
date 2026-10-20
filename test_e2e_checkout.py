@@ -61,7 +61,7 @@ class E2ECheckoutTestCase(unittest.TestCase):
         inv_page = self.client.get(f"/orders/{latest_order['id']}/invoice")
         self.assertEqual(inv_page.status_code, 200)
         self.assertIn(b'TAX INVOICE', inv_page.data)
-        self.assertIn(b'33AAACK8765B1ZG', inv_page.data)
+        self.assertIn(b'00000000000000', inv_page.data)
         self.assertIn(b'33AAAAA0000A1Z5', inv_page.data)
         print("E2E B2B Wholesale checkout, tracking, and GST tax invoice verified successfully!")
 

@@ -46,7 +46,7 @@
         <i class="bi bi-plus-circle text-success me-1"></i> Add Offer Banner
       </h5>
 
-      <form action="{{ url_for('admin.banners') }}" method="POST">
+      <form action="{{ url_for('admin.banners') }}" method="POST" enctype="multipart/form-data">
         <div class="mb-3">
           <label class="form-label small fw-bold">Headline Title *</label>
           <input type="text" name="title" class="form-control" placeholder="e.g. B2B Wholesale Mandi Deals" required>
@@ -57,19 +57,40 @@
           <input type="text" name="subtitle" class="form-control" placeholder="e.g. Save 25% on 50kg rice sacks and oil tins">
         </div>
 
-        <div class="mb-3">
-          <label class="form-label small fw-bold">Badge Text</label>
-          <input type="text" name="badge_text" class="form-control" placeholder="e.g. Mandi Super Deal">
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label small fw-bold">Badge Text</label>
+            <input type="text" name="badge_text" class="form-control" placeholder="e.g. Mandi Super Deal">
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-bold">Coupon Code (Optional)</label>
+            <input type="text" name="coupon_code" class="form-control text-uppercase" placeholder="e.g. B2BBULK5">
+          </div>
         </div>
 
-        <div class="mb-3">
-          <label class="form-label small fw-bold">Coupon Code (Optional)</label>
-          <input type="text" name="coupon_code" class="form-control text-uppercase" placeholder="e.g. B2BBULK5">
-        </div>
+        <!-- Banner Image Upload & Preview -->
+        <div class="mb-3 p-3 bg-light rounded-3 border">
+          <label class="form-label small fw-bold mb-2 text-dark">
+            <i class="bi bi-image text-success me-1"></i> Banner Graphic / Overlay Image
+          </label>
+          
+          <div class="d-flex align-items-center gap-3 mb-2">
+            <div class="border rounded-3 bg-white p-1 text-center shadow-sm" style="width: 70px; height: 50px; flex-shrink: 0;">
+              <img id="bannerImagePreview" 
+                   src="{{ url_for('static', filename='img/fallback.svg') }}" 
+                   alt="Preview" 
+                   class="w-100 h-100 object-fit-cover rounded-2">
+            </div>
+            <div class="flex-grow-1">
+              <label class="form-label extra-small fw-bold text-muted mb-1">Upload banner image file</label>
+              <input type="file" name="image_file" id="bannerImageFileInput" class="form-control form-control-sm" accept="image/*">
+            </div>
+          </div>
 
-        <div class="mb-3">
-          <label class="form-label small fw-bold">Image URL (Overlay)</label>
-          <input type="url" name="image_url" class="form-control" placeholder="https://images.unsplash.com/...">
+          <div class="mt-2">
+            <label class="form-label extra-small fw-bold text-muted mb-1">Or paste image URL</label>
+            <input type="text" name="image_url" class="form-control form-control-sm" placeholder="https://images.unsplash.com/...">
+          </div>
         </div>
 
         <div class="mb-3">
@@ -77,14 +98,15 @@
           <input type="text" name="link_url" class="form-control" value="/category/rice">
         </div>
 
-        <div class="mb-3">
-          <label class="form-label small fw-bold">Background Gradient (CSS)</label>
-          <input type="text" name="bg_gradient" class="form-control form-control-sm" value="linear-gradient(135deg, #059669 0%, #064e3b 100%)">
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label small fw-bold">Display Order</label>
-          <input type="number" name="display_order" class="form-control form-control-sm" value="1">
+        <div class="row g-2 mb-3">
+          <div class="col-8">
+            <label class="form-label small fw-bold">Background Gradient (CSS)</label>
+            <input type="text" name="bg_gradient" class="form-control form-control-sm" value="linear-gradient(135deg, #059669 0%, #064e3b 100%)">
+          </div>
+          <div class="col-4">
+            <label class="form-label small fw-bold">Order</label>
+            <input type="number" name="display_order" class="form-control form-control-sm" value="1">
+          </div>
         </div>
 
         <button type="submit" class="btn btn-success w-100 fw-bold rounded-pill">
@@ -95,4 +117,23 @@
   </div>
 
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  const bannerFileInput = document.getElementById('bannerImageFileInput');
+  const bannerPreviewImg = document.getElementById('bannerImagePreview');
+  if (bannerFileInput && bannerPreviewImg) {
+    bannerFileInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          bannerPreviewImg.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+</script>
 {% endblock %}

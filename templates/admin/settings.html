@@ -67,12 +67,12 @@
         <div class="row g-3 mb-3">
           <div class="col-md-6">
             <label class="form-label small fw-bold">Seller GSTIN Identification *</label>
-            <input type="text" name="store_gstin" class="form-control text-uppercase" value="{{ settings.get('store_gstin', '33AAACK8765B1ZG') }}" required>
+            <input type="text" name="store_gstin" class="form-control text-uppercase" value="{{ settings.get('store_gstin', '00000000000000') }}" required>
             <div class="form-text small">Printed on all downloadable tax invoices for Input Tax Credit compliance.</div>
           </div>
           <div class="col-md-6">
             <label class="form-label small fw-bold">Customer Support Phone</label>
-            <input type="text" name="store_phone" class="form-control" value="{{ settings.get('store_phone', '+91 98765 43210') }}" required>
+            <input type="text" name="store_phone" class="form-control" value="{{ settings.get('store_phone', '8122687377') }}" required>
           </div>
         </div>
 
@@ -83,7 +83,7 @@
 
         <div class="mb-3">
           <label class="form-label small fw-bold">Physical Warehouse / Store Address</label>
-          <textarea name="store_address" rows="2" class="form-control" required>{{ settings.get('store_address', 'No. 42, Market Road, Commercial Hub, Chennai, Tamil Nadu - 600001') }}</textarea>
+          <textarea name="store_address" rows="2" class="form-control" required>{{ settings.get('store_address', '81/135, Kuppichipalayam road, Periyanaickenpalayam, Coimbatore - 641020') }}</textarea>
         </div>
 
         <!-- Shipping Fees -->

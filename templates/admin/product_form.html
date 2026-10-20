@@ -13,7 +13,7 @@
         <i class="bi bi-info-circle text-success me-2"></i> Product Information
       </h5>
 
-      <form action="{{ url_for('admin.product_edit', id=product.id) if product else url_for('admin.product_new') }}" method="POST">
+      <form action="{{ url_for('admin.product_edit', id=product.id) if product else url_for('admin.product_new') }}" method="POST" enctype="multipart/form-data">
         
         <div class="mb-3">
           <label class="form-label small fw-bold">Product Title *</label>
@@ -40,10 +40,52 @@
           <textarea name="description" rows="3" class="form-control" placeholder="Describe quality, source mill, culinary usage...">{{ product.description if product else '' }}</textarea>
         </div>
 
-        <div class="mb-3">
-          <label class="form-label small fw-bold">Image URL</label>
-          <input type="url" name="image_url" class="form-control" value="{{ product.image_url if product else '' }}" placeholder="https://images.unsplash.com/...">
-          <div class="form-text small">Use a high resolution image URL or leave empty for the automatic SVG grocery fallback.</div>
+        <!-- Product Image Upload & Preview -->
+        <div class="mb-3 p-3 bg-light rounded-3 border">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="form-label small fw-bold mb-0 text-dark">
+              <i class="bi bi-image text-success me-1"></i> Product Image
+            </label>
+            {% if product and product.image_url %}
+              <span class="badge bg-success-subtle text-success small">Current Image Loaded</span>
+            {% endif %}
+          </div>
+
+          <div class="row g-3 align-items-center">
+            <!-- Preview Box -->
+            <div class="col-auto">
+              <div class="position-relative border rounded-3 bg-white p-1 text-center shadow-sm" style="width: 100px; height: 100px;">
+                <img id="imagePreview" 
+                     src="{{ product.image_url if (product and product.image_url) else url_for('static', filename='img/fallback.svg') }}" 
+                     alt="Product Preview" 
+                     class="w-100 h-100 object-fit-cover rounded-2"
+                     onerror="if(!this.dataset.fallbackApplied){this.dataset.fallbackApplied='true';this.src='/static/img/fallback.svg';}">
+              </div>
+            </div>
+
+            <!-- Upload Controls -->
+            <div class="col">
+              <label class="form-label extra-small fw-bold text-muted mb-1">
+                Upload from your device (PNG, JPG, WEBP, GIF, SVG)
+              </label>
+              <input type="file" name="image_file" id="imageFileInput" class="form-control form-control-sm mb-2" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml">
+              
+              <div class="d-flex align-items-center gap-3">
+                <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 extra-small" id="toggleUrlFieldBtn" onclick="toggleUrlField()">
+                  <i class="bi bi-link-45deg"></i> <span id="toggleUrlText">Or use external image URL</span>
+                </button>
+                <button type="button" class="btn btn-sm btn-link text-danger text-decoration-none p-0 extra-small d-none" id="clearUploadBtn" onclick="clearSelectedImage()">
+                  <i class="bi bi-x-circle"></i> Reset file
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Optional URL Fallback / Direct Link -->
+          <div id="urlInputContainer" class="mt-2 {{ '' if (product and product.image_url and product.image_url.startswith('http')) else 'd-none' }}">
+            <label class="form-label extra-small fw-bold text-muted mb-1">Or paste web image URL</label>
+            <input type="text" name="image_url" id="imageUrlInput" class="form-control form-control-sm" value="{{ product.image_url if product else '' }}" placeholder="https://example.com/image.jpg">
+          </div>
         </div>
 
         <div class="row g-3 mb-3">
@@ -233,4 +275,52 @@
   </div>
 
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  const fileInput = document.getElementById('imageFileInput');
+  const previewImg = document.getElementById('imagePreview');
+  const clearBtn = document.getElementById('clearUploadBtn');
+  const urlContainer = document.getElementById('urlInputContainer');
+  const toggleUrlText = document.getElementById('toggleUrlText');
+  const defaultSrc = previewImg ? previewImg.src : '';
+
+  if (fileInput) {
+    fileInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        if (!file.type.startsWith('image/')) {
+          alert('Please select a valid image file (PNG, JPG, WEBP, GIF, SVG).');
+          clearSelectedImage();
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          if (previewImg) previewImg.src = evt.target.result;
+          if (clearBtn) clearBtn.classList.remove('d-none');
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  function clearSelectedImage() {
+    if (fileInput) fileInput.value = '';
+    if (previewImg) previewImg.src = defaultSrc;
+    if (clearBtn) clearBtn.classList.add('d-none');
+  }
+
+  function toggleUrlField() {
+    if (!urlContainer) return;
+    const isHidden = urlContainer.classList.contains('d-none');
+    if (isHidden) {
+      urlContainer.classList.remove('d-none');
+      if (toggleUrlText) toggleUrlText.textContent = 'Hide image URL field';
+    } else {
+      urlContainer.classList.add('d-none');
+      if (toggleUrlText) toggleUrlText.textContent = 'Or use external image URL';
+    }
+  }
+</script>
 {% endblock %}

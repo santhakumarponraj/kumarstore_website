@@ -66,15 +66,21 @@
         <i class="bi bi-plus-circle text-success me-1"></i> Add Category
       </h5>
 
-      <form action="{{ url_for('admin.categories') }}" method="POST">
+      <form action="{{ url_for('admin.categories') }}" method="POST" enctype="multipart/form-data">
         <div class="mb-3">
           <label class="form-label small fw-bold">Category Name *</label>
           <input type="text" name="name" class="form-control" placeholder="e.g. Organic Millets" required>
         </div>
 
-        <div class="mb-3">
-          <label class="form-label small fw-bold">URL Slug *</label>
-          <input type="text" name="slug" class="form-control" placeholder="e.g. organic-millets" required>
+        <div class="row g-2 mb-3">
+          <div class="col-8">
+            <label class="form-label small fw-bold">URL Slug *</label>
+            <input type="text" name="slug" class="form-control" placeholder="e.g. organic-millets" required>
+          </div>
+          <div class="col-4">
+            <label class="form-label small fw-bold">Order</label>
+            <input type="number" name="display_order" class="form-control" value="11">
+          </div>
         </div>
 
         <div class="mb-3">
@@ -82,14 +88,29 @@
           <textarea name="description" rows="2" class="form-control" placeholder="Short description for storefront..."></textarea>
         </div>
 
-        <div class="mb-3">
-          <label class="form-label small fw-bold">Image URL</label>
-          <input type="url" name="image_url" class="form-control" placeholder="https://images.unsplash.com/...">
-        </div>
+        <!-- Local Image Upload & Preview -->
+        <div class="mb-3 p-3 bg-light rounded-3 border">
+          <label class="form-label small fw-bold mb-2 text-dark">
+            <i class="bi bi-image text-success me-1"></i> Category Icon / Image
+          </label>
+          
+          <div class="d-flex align-items-center gap-3 mb-2">
+            <div class="border rounded-3 bg-white p-1 text-center shadow-sm" style="width: 54px; height: 54px; flex-shrink: 0;">
+              <img id="catImagePreview" 
+                   src="{{ url_for('static', filename='img/fallback.svg') }}" 
+                   alt="Preview" 
+                   class="w-100 h-100 object-fit-cover rounded-2">
+            </div>
+            <div class="flex-grow-1">
+              <label class="form-label extra-small fw-bold text-muted mb-1">Select local image file</label>
+              <input type="file" name="image_file" id="catImageFileInput" class="form-control form-control-sm" accept="image/*">
+            </div>
+          </div>
 
-        <div class="mb-3">
-          <label class="form-label small fw-bold">Display Order</label>
-          <input type="number" name="display_order" class="form-control" value="11">
+          <div class="mt-2">
+            <label class="form-label extra-small fw-bold text-muted mb-1">Or paste image URL</label>
+            <input type="text" name="image_url" class="form-control form-control-sm" placeholder="https://images.unsplash.com/...">
+          </div>
         </div>
 
         <button type="submit" class="btn btn-success w-100 fw-bold rounded-pill">
@@ -100,4 +121,23 @@
   </div>
 
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  const catFileInput = document.getElementById('catImageFileInput');
+  const catPreviewImg = document.getElementById('catImagePreview');
+  if (catFileInput && catPreviewImg) {
+    catFileInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          catPreviewImg.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+</script>
 {% endblock %}
